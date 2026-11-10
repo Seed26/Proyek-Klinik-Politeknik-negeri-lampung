@@ -75,6 +75,21 @@ const resPatchQueue = await fetch(`http://localhost:${PORT}/api/queues/${queue.i
 });
 assert.strictEqual(resPatchQueue.status, 200);
 
+const resPutQueue = await fetch(`http://localhost:${PORT}/api/queues/${queue.id}`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Pasien Test Diubah',
+    clinic: 'Poli Umum',
+    doctor: 'dr. Tya',
+    time: '09:00',
+    date: '2026-11-08',
+    status: 'Diperiksa',
+    complaint: 'Pusing dan demam'
+  })
+});
+assert.strictEqual(resPutQueue.status, 200);
+
 const resDeleteQueue = await fetch(`http://localhost:${PORT}/api/queues/${queue.id}`, {
   method: 'DELETE'
 });
@@ -110,6 +125,19 @@ assert.strictEqual(resPatchOrder.status, 200);
 
 const resStatic = await fetch(`http://localhost:${PORT}/`);
 assert.strictEqual(resStatic.status, 200);
+const indexHtml = await resStatic.text();
+assert(indexHtml.includes('id="admin-home-nav"') && indexHtml.includes('id="patient-home-nav"'));
+assert(indexHtml.includes('id="patient-jadwal-nav"'));
+
+const resHomeHtml = await fetch(`http://localhost:${PORT}/pages/home.html`);
+assert.strictEqual(resHomeHtml.status, 200);
+const homeHtml = await resHomeHtml.text();
+assert(homeHtml.includes('id="admin-home-dashboard"') && homeHtml.includes('id="patient-home-dashboard"'));
+
+const resJadwalHtml = await fetch(`http://localhost:${PORT}/pages/jadwal.html`);
+assert.strictEqual(resJadwalHtml.status, 200);
+const jadwalHtml = await resJadwalHtml.text();
+assert(jadwalHtml.includes('id="jadwal-admin-table"') && jadwalHtml.includes('id="jadwal-patient-grid"'));
 
 console.log('Self-check passed: Backend, SQLite DB, dan Frontend static OK.');
 process.exit(0);

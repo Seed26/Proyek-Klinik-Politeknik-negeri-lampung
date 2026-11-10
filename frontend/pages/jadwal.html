@@ -1,23 +1,38 @@
-<!-- Page: Home Pengguna / Jadwal Dokter Admin -->
-<section class="page patient-home-page" id="page-jadwal">
-  <div id="patient-home-dashboard">
-    <div class="patient-home-welcome">
+<!-- Page: Jadwal Dokter (Admin & Patient) -->
+<section class="page" id="page-jadwal">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">JADWAL PRAKTEK DOKTER</p>
+      <h1 id="jadwal-title">Jadwal Dokter</h1>
+      <p class="muted" id="jadwal-subtitle">Lihat jadwal praktek dokter yang tersedia di Klinik Polinela.</p>
+    </div>
+    <button id="add-schedule-btn" class="btn primary hidden">＋ Tambah Jadwal</button>
+  </div>
+
+  <article class="panel">
+    <div class="panel-heading section-tools">
       <div>
-        <p class="eyebrow">KLINIK POLINELA</p>
-        <h1>Selamat Datang, <span id="patient-home-name">Pengguna</span>!</h1>
-        <p>Akses informasi dan layanan kesehatan Klinik Polinela dengan mudah.</p>
-        <div class="patient-home-meta"><div><small>Nama</small><strong id="patient-home-full-name">Belum tersedia</strong></div><div><small>NPM</small><strong id="patient-home-npm">Belum tersedia</strong></div><div><small>Program Studi</small><strong id="patient-home-study">Belum tersedia</strong></div></div>
-      </div><div class="patient-home-art" aria-hidden="true">＋</div>
+        <h2 id="jadwal-list-heading">Daftar Jadwal Praktek</h2>
+        <p class="muted" id="jadwal-list-desc">Daftar dokter dan jam layanan klinik.</p>
+      </div>
     </div>
-    <div class="patient-home-history">
-      <article class="panel patient-home-card"><div class="patient-home-card-head"><div><span class="patient-home-icon">☷</span><h2>Riwayat Antrean</h2></div><strong id="patient-home-queue-total">0</strong></div><div id="patient-home-queue"></div><button class="btn outline full" data-goto="pasien">Lihat Riwayat <span>→</span></button></article>
-      <article class="panel patient-home-card"><div class="patient-home-card-head"><div><span class="patient-home-icon">▤</span><h2>Riwayat Pesanan Obat</h2></div><strong id="patient-home-order-total">0</strong></div><div id="patient-home-orders"></div><button class="btn outline full" data-goto="info-obat">Lihat Riwayat <span>→</span></button></article>
+    <!-- Admin View: Tabel Manajemen Jadwal -->
+    <div id="jadwal-admin-table" class="table-wrap hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>Dokter</th>
+            <th>Poli</th>
+            <th>Hari</th>
+            <th>Jam Praktek</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="admin-jadwal-body"></tbody>
+      </table>
     </div>
-    <div class="patient-home-section"><div class="panel-heading"><div><p class="eyebrow">LAYANAN KLINIK</p><h2>Jadwal Dokter</h2></div><button class="text-btn" data-goto="jadwal">Lihat Semua Jadwal →</button></div><div id="patient-home-schedules" class="patient-home-schedule-grid"></div></div>
-    <div class="patient-home-section"><div class="panel-heading"><div><p class="eyebrow">MUDAH DIAKSES</p><h2>Akses Cepat</h2></div></div><div class="patient-home-shortcuts"><button data-goto="pasien"><span>☷</span><strong>Ambil Antrean</strong><small>Daftar kunjungan</small></button><button data-goto="info-obat"><span>▤</span><strong>Informasi Obat</strong><small>Cari informasi obat</small></button><button data-goto="lokasi"><span>⌖</span><strong>Lokasi Klinik</strong><small>Temukan klinik</small></button><button data-goto="jadwal"><span>◷</span><strong>Jadwal Dokter</strong><small>Lihat jadwal praktik</small></button></div></div>
-  </div>
-  <div id="admin-schedule-dashboard">
-    <div class="page-heading"><div><p class="eyebrow">JADWAL DOKTER</p><h1 id="jadwal-title">Jadwal Dokter</h1><p class="muted" id="jadwal-subtitle"></p></div><button id="add-schedule-btn" class="btn primary hidden">＋ Tambah Jadwal</button></div>
-    <article class="panel"><div class="panel-heading section-tools"><div><h2 id="jadwal-list-heading">Daftar Jadwal Praktek</h2><p class="muted" id="jadwal-list-desc"></p></div></div><div id="jadwal-admin-table" class="table-wrap hidden"><table><thead><tr><th>Dokter</th><th>Poli</th><th>Hari</th><th>Jam Praktek</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="admin-jadwal-body"></tbody></table></div></article>
-  </div>
+    <!-- Patient View: Grid Kartu Jadwal Dokter -->
+    <div id="jadwal-patient-grid" class="patient-home-schedule-grid hidden" style="padding: 1rem 0;"></div>
+  </article>
 </section>

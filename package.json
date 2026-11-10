@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Sistem Informasi Manajemen Klinik Polinela",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "node backend/server.js 3002",
+    "start": "node backend/server.js 3500",
+    "dev": "node backend/server.js 3500",
     "test": "node test.js"
   }
 }

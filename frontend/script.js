@@ -86,8 +86,8 @@ const writeStore = data => localStorage.setItem(STORE, JSON.stringify(data));
 const bodyOf = options => options.body ? JSON.parse(options.body) : {};
 const nextId = list => list.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
 
-const API_BASE = (window.location.protocol.startsWith('http') && window.location.port && !['3000', '3001', '3002'].includes(window.location.port))
-  ? 'http://localhost:3002'
+const API_BASE = (window.location.protocol.startsWith('http') && window.location.port && !['3000', '3001', '3002', '3003', '3500'].includes(window.location.port))
+  ? 'http://localhost:3500'
   : '';
 
 let useMock = null;
@@ -466,64 +466,53 @@ function startSession() {
   $("#login-screen").classList.add("hidden");
   $("#app").classList.remove("hidden");
   const isAdmin = currentUser.role === "admin";
-  $$(".nav-link[data-page='home'], .nav-link[data-page='obat'], .nav-link[data-page='antrian']").forEach(link =>
-    link.classList.toggle("hidden", !isAdmin)
-  );
-  $("#admin-jadwal-nav").classList.toggle("hidden", !isAdmin);
-  $("#patient-nav").classList.toggle("hidden", isAdmin);
-  $("#info-obat-nav").classList.toggle("hidden", isAdmin);
-  $("#patient-lokasi-nav").classList.toggle("hidden", isAdmin);
-  $("#patient-jadwal-nav").classList.toggle("hidden", isAdmin);
+
+  // Toggle navigation items based on role
+  $("#admin-home-nav")?.classList.toggle("hidden", !isAdmin);
+  $("#admin-antrian-nav")?.classList.toggle("hidden", !isAdmin);
+  $("#admin-jadwal-nav")?.classList.toggle("hidden", !isAdmin);
+  $("#admin-obat-nav")?.classList.toggle("hidden", !isAdmin);
+
+  $("#patient-home-nav")?.classList.toggle("hidden", isAdmin);
+  $("#patient-nav")?.classList.toggle("hidden", isAdmin);
+  $("#patient-jadwal-nav")?.classList.toggle("hidden", isAdmin);
+  $("#info-obat-nav")?.classList.toggle("hidden", isAdmin);
+  $("#patient-lokasi-nav")?.classList.toggle("hidden", isAdmin);
+
+  const brandSubtitle = $("#brand-role-subtitle");
+  if (brandSubtitle) {
+    brandSubtitle.textContent = isAdmin ? "Management System" : "Layanan Pasien";
+  }
+
   $("#top-user-name").textContent = currentUser.name;
   $("#profile-menu-name").textContent = currentUser.name;
   $("#profile-menu-email").textContent = currentUser.email || "-";
 
-$("#profile-menu-role").textContent = isAdmin ? "Administrator" : "Pengguna / Pasien";
+  $("#profile-menu-role").textContent = isAdmin ? "Administrator" : "Pengguna / Pasien";
+  $(".user-chip small").textContent = isAdmin ? "Administrator" : "Pengguna / Pasien";
 
- $(".user-chip small").textContent = isAdmin
-    ? "Administrator"
-    : "Pengguna / Pasien";
+  // Mengisi informasi profil
+  $("#profile-name").value = currentUser.name || "";
+  $("#profile-email").value = currentUser.email || "";
+  $("#profile-phone").value = currentUser.phone || "";
+  $("#profile-age").value = currentUser.age || "";
 
-// Mengisi informasi profil
-$("#profile-name").value = currentUser.name || "";
-$("#profile-email").value = currentUser.email || "";
-$("#profile-phone").value = currentUser.phone || "";
-$("#profile-age").value = currentUser.age || "";
-
-$("#profile-status").value = currentUser.status ||
+  $("#profile-status").value = currentUser.status ||
     (isAdmin ? "civitas akademik" : "mahasiswa");
 
-$("#profile-bio").value = currentUser.bio || "";
+  $("#profile-bio").value = currentUser.bio || "";
+  $("#profile-photo").value = "";
 
-// Mengosongkan pilihan foto sebelumnya
-$("#profile-photo").value = "";
+  $("#profile-heading-name").textContent = currentUser.name;
+  $("#profile-email-preview").textContent = currentUser.email;
 
-// Menampilkan nama dan email
-$("#profile-heading-name").textContent = currentUser.name;
-$("#profile-email-preview").textContent = currentUser.email;
-
-// Menampilkan status
-$("#profile-status-preview").textContent =
+  $("#profile-status-preview").textContent =
     formatProfileStatus($("#profile-status").value);
 
-// Menampilkan foto profil
-renderAvatar(
-    $(".avatar"),
-    currentUser.name,
-    currentUser.photo
-);
+  renderAvatar($(".avatar"), currentUser.name, currentUser.photo);
+  renderAvatar($(".profile-dropdown-avatar"), currentUser.name, currentUser.photo);
+  renderAvatar($("#profile-avatar"), currentUser.name, currentUser.photo);
 
-renderAvatar(
-    $(".profile-dropdown-avatar"),
-    currentUser.name,
-    currentUser.photo
-);
-
-renderAvatar(
-    $("#profile-avatar"),
-    currentUser.name,
-    currentUser.photo
-);
   $("#home-greeting").innerHTML = isAdmin
     ? 'Selamat datang, Admin! <span class="wave">✦</span>'
     : `Halo, ${escapeHTML(currentUser.name.split(" ")[0])}!`;
@@ -531,22 +520,22 @@ renderAvatar(
     ? "Berikut ringkasan aktivitas Klinik Polinela hari ini."
     : "Selamat datang di layanan pasien Klinik Polinela.";
 
+  showPage("home");
+
   if (isAdmin) {
-    showPage("home");
     renderHome();
     renderMedicines();
     renderAdminOrders();
     renderQueues();
     renderSchedules();
-    startPolling();
   } else {
-    showPage("pasien");
+    renderPatientHome();
     renderPatientQueues();
     renderInfoObat();
     renderOrderHistory();
     renderSchedules();
-    startPolling();
   }
+  startPolling();
   toast(`Berhasil masuk sebagai ${isAdmin ? "Admin" : "Pengguna"}`);
 }
 
@@ -629,28 +618,59 @@ if (legacyLogoutBtn) {
 
 function showPage(page) {
   const isAdmin = currentUser?.role === "admin";
-  if (!isAdmin && page !== "pasien" && page !== "profil" && page !== "info-obat" && page !== "lokasi" && page !== "jadwal") page = "pasien";
+  if (isAdmin) {
+    if (page === "pasien" || page === "info-obat" || page === "lokasi") page = "home";
+  } else {
+    if (page === "antrian" || page === "obat") page = "home";
+  }
+
   $$(".page").forEach(section => section.classList.toggle("active", section.id === `page-${page}`));
-  $$(".nav-link").forEach(link => link.classList.toggle("active", link.dataset.page === page));
-  const labels = {
-    home: "Home / Dashboard",
-    obat: "Data Obat",
-    antrian: "Antrian",
-    profil: "Profil",
-    pasien: "Antrian Saya",
-    "info-obat": "Informasi Obat",
-    lokasi: "Lokasi Klinik",
-    jadwal: "Jadwal Dokter"
-  };
-  $("#breadcrumb-current").textContent = labels[page] || "Home / Dashboard";
-  if (page === "info-obat") {
+
+  $$(".nav-link").forEach(link => {
+    const isLinkForRole = isAdmin
+      ? link.id.startsWith("admin-")
+      : link.id.startsWith("patient-") || link.id === "info-obat-nav";
+    link.classList.toggle("active", isLinkForRole && link.dataset.page === page);
+  });
+
+  const labels = isAdmin
+    ? {
+        home: "Home / Dashboard",
+        antrian: "Kelola Antrian",
+        jadwal: "Jadwal Dokter",
+        obat: "Data Obat",
+        profil: "Profil Admin"
+      }
+    : {
+        home: "Beranda",
+        pasien: "Antrian Saya",
+        jadwal: "Jadwal Dokter",
+        "info-obat": "Informasi Obat",
+        lokasi: "Lokasi Klinik",
+        profil: "Profil Pasien"
+      };
+
+  $("#breadcrumb-current").textContent = labels[page] || (isAdmin ? "Home / Dashboard" : "Beranda");
+
+  if (page === "home") {
+    $("#admin-home-dashboard")?.classList.toggle("hidden", !isAdmin);
+    $("#patient-home-dashboard")?.classList.toggle("hidden", isAdmin);
+    if (isAdmin) renderHome();
+    else renderPatientHome();
+  } else if (page === "jadwal") {
+    renderSchedules();
+  } else if (page === "info-obat") {
     renderInfoObat();
     renderOrderHistory();
-  }
-  if (page === "obat") {
+  } else if (page === "obat") {
     renderMedicines();
     renderAdminOrders();
+  } else if (page === "antrian") {
+    renderQueues();
+  } else if (page === "pasien") {
+    renderPatientQueues();
   }
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -759,10 +779,26 @@ function renderMedicines() {
           <input name="image" type="file" accept="image/*" class="file-input" />
         </div>
         ${previewHTML}
-        <label>Nama obat</label>
-        <input value="${escapeHTML(m.name)}" disabled />
-        <label>Stok saat ini</label>
-        <input name="stock" type="number" min="0" value="${Number(m.stock)}" required />
+        <div class="form-row">
+          <div>
+            <label>Nama obat</label>
+            <input name="name" value="${escapeHTML(m.name)}" required />
+          </div>
+          <div>
+            <label>Kategori</label>
+            <input name="category" value="${escapeHTML(m.category || '')}" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>Bentuk sediaan</label>
+            <input name="form" value="${escapeHTML(m.form || 'Tablet')}" required />
+          </div>
+          <div>
+            <label>Stok saat ini</label>
+            <input name="stock" type="number" min="0" value="${Number(m.stock)}" required />
+          </div>
+        </div>
         <label>Deskripsi / Kegunaan</label>
         <textarea name="description" rows="3">${escapeHTML(m.description || "")}</textarea>
         <label>Dosis</label>
@@ -782,6 +818,9 @@ function renderMedicines() {
           await api(`/api/medicines/${m.id}`, {
             method: 'PUT',
             body: JSON.stringify({
+              name: (data.name || m.name).trim(),
+              category: (data.category || m.category).trim(),
+              form: (data.form || m.form).trim(),
               stock: Number(data.stock),
               image,
               description: (data.description || "").trim(),
@@ -833,11 +872,17 @@ function renderQueues() {
         <td><strong>${escapeHTML(q.clinic)}</strong><div class="muted">${escapeHTML(q.doctor)}</div></td>
         <td>${escapeHTML(q.time)}</td>
         <td>${statusBadge(q.status)}</td>
-        <td>${
-          q.status !== "Selesai"
-            ? `<button class="row-action" data-next-status="${q.id}">${q.status === "Menunggu" ? "Periksa" : "Selesaikan"}</button>`
-            : '<span class="muted">—</span>'
-        }</td>
+        <td>
+          <div class="action-group">
+            ${
+              q.status !== "Selesai"
+                ? `<button class="row-action" data-next-status="${q.id}">${q.status === "Menunggu" ? "Periksa" : "Selesaikan"}</button>`
+                : '<span class="status done">Selesai</span>'
+            }
+            <button class="row-action" data-edit-queue="${q.id}">Edit</button>
+            <button class="row-action danger" data-delete-queue="${q.id}">Hapus</button>
+          </div>
+        </td>
       </tr>`
         )
         .join("")
@@ -862,6 +907,95 @@ function renderQueues() {
         renderQueues();
         renderHome();
         toast("Status antrian diperbarui");
+      } catch (err) {
+        toast(err.message);
+      }
+    })
+  );
+
+  $$("[data-edit-queue]").forEach(button =>
+    button.addEventListener("click", () => {
+      const id = Number(button.dataset.editQueue);
+      const q = queues.find(item => item.id === id);
+      if (!q) return;
+      openModal(
+        "Edit Data Antrian",
+        `<label>No. Antrian</label>
+         <input value="${escapeHTML(q.number)}" disabled />
+         <label>Nama Pasien</label>
+         <input name="name" value="${escapeHTML(q.name)}" required />
+         <div class="form-row">
+           <div>
+             <label>Layanan / Poli</label>
+             <select name="clinic">
+               <option ${q.clinic === 'Poli Umum' ? 'selected' : ''}>Poli Umum</option>
+               <option ${q.clinic === 'Konsultasi Psikologi' ? 'selected' : ''}>Konsultasi Psikologi</option>
+             </select>
+           </div>
+           <div>
+             <label>Dokter / Tenaga Medis</label>
+             <select name="doctor">
+               <option ${q.doctor === 'dr. Dian' ? 'selected' : ''}>dr. Dian</option>
+               <option ${q.doctor === 'dr. Tya' ? 'selected' : ''}>dr. Tya</option>
+               <option ${q.doctor === 'Psikolog Rini, M.Psi.' ? 'selected' : ''}>Psikolog Rini, M.Psi.</option>
+             </select>
+           </div>
+         </div>
+         <div class="form-row">
+           <div>
+             <label>Tanggal Kunjungan</label>
+             <input name="date" type="date" value="${escapeHTML(q.date || todayKey)}" required />
+           </div>
+           <div>
+             <label>Waktu / Jam</label>
+             <input name="time" type="time" value="${escapeHTML(q.time || '08:00')}" required />
+           </div>
+         </div>
+         <div class="form-row">
+           <div>
+             <label>Status Antrian</label>
+             <select name="status">
+               <option value="Menunggu" ${q.status === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
+               <option value="Diperiksa" ${q.status === 'Diperiksa' ? 'selected' : ''}>Diperiksa</option>
+               <option value="Selesai" ${q.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+             </select>
+           </div>
+         </div>
+         <label>Keluhan Pasien</label>
+         <textarea name="complaint" rows="3">${escapeHTML(q.complaint || "")}</textarea>`,
+        async form => {
+          const data = Object.fromEntries(new FormData(form).entries());
+          await api(`/api/queues/${q.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              name: data.name.trim(),
+              clinic: data.clinic,
+              doctor: data.doctor,
+              date: data.date,
+              time: data.time,
+              status: data.status,
+              complaint: (data.complaint || "").trim()
+            })
+          });
+          await refreshData();
+          renderQueues();
+          renderHome();
+          toast("Data antrian berhasil diperbarui");
+        }
+      );
+    })
+  );
+
+  $$("[data-delete-queue]").forEach(button =>
+    button.addEventListener("click", async () => {
+      if (!confirm("Hapus antrian ini?")) return;
+      const id = Number(button.dataset.deleteQueue);
+      try {
+        await api(`/api/queues/${id}`, { method: 'DELETE' });
+        await refreshData();
+        renderQueues();
+        renderHome();
+        toast("Antrian berhasil dihapus");
       } catch (err) {
         toast(err.message);
       }
@@ -908,6 +1042,7 @@ async function cancelQueue(id) {
     await api(`/api/queues/${id}`, { method: 'DELETE' });
     await refreshData();
     renderPatientQueues();
+    renderPatientHome();
     renderQueues();
     renderHome();
     toast('Antrian berhasil dibatalkan');
@@ -917,145 +1052,175 @@ async function cancelQueue(id) {
 }
 window.cancelQueue = cancelQueue;
 
+function renderPatientHome() {
+  if (!currentUser || currentUser.role === "admin") return;
+  const patientDashboard = $("#patient-home-dashboard");
+  if (!patientDashboard) return;
+
+  const firstName = currentUser.name ? currentUser.name.split(" ")[0] : "Pengguna";
+  if ($("#patient-home-name")) $("#patient-home-name").textContent = firstName;
+  if ($("#patient-home-full-name")) $("#patient-home-full-name").textContent = currentUser.name || "Belum tersedia";
+  if ($("#patient-home-npm")) $("#patient-home-npm").textContent = currentUser.nim || currentUser.npm || currentUser.phone || "-";
+  if ($("#patient-home-study")) $("#patient-home-study").textContent = currentUser.prodi || currentUser.program_studi || formatProfileStatus(currentUser.status || "mahasiswa");
+
+  const ownQueues = queues.filter(q => q.patientEmail && q.patientEmail.toLowerCase() === currentUser.email?.toLowerCase());
+  if ($("#patient-home-queue-total")) $("#patient-home-queue-total").textContent = ownQueues.length;
+  const q = ownQueues[0];
+  if ($("#patient-home-queue")) {
+    $("#patient-home-queue").innerHTML = q
+      ? `<div class="patient-home-record"><strong>No. ${escapeHTML(q.number)}</strong><span>${escapeHTML(q.date || "—")}</span><span>${escapeHTML(q.clinic || "Layanan klinik")}</span>${statusBadge(q.status)}</div>`
+      : '<p class="patient-home-empty">Belum ada riwayat antrean. Silakan ambil antrean untuk mendaftar kunjungan.</p>';
+  }
+
+  const userId = Number(currentUser.id) || 0;
+  const ownOrders = orders.filter(o => (Number(o.userId) || 0) === userId || (o.name && o.name.toLowerCase() === currentUser.name.toLowerCase()));
+  if ($("#patient-home-order-total")) $("#patient-home-order-total").textContent = ownOrders.length;
+  const o = ownOrders[0];
+  if ($("#patient-home-orders")) {
+    $("#patient-home-orders").innerHTML = o
+      ? `<div class="patient-home-record"><strong>${escapeHTML(Array.isArray(o.items) && o.items[0]?.name ? o.items[0].name : "Pesanan obat")}</strong><span>${escapeHTML(o.date || o.createdAt || "—")}</span><span>${Array.isArray(o.items) ? o.items.length : 1} item</span>${statusBadge(o.status || "Menunggu")}</div>`
+      : '<p class="patient-home-empty">Belum ada riwayat pesanan obat.</p>';
+  }
+
+  if ($("#patient-home-schedules")) {
+    const activeSchedules = schedules.filter(s => s.is_active);
+    $("#patient-home-schedules").innerHTML = activeSchedules.length
+      ? activeSchedules.slice(0, 4).map(s => `
+          <article class="patient-home-schedule">
+            <span class="patient-home-icon">♡</span>
+            <div><strong>${escapeHTML(s.doctor_name)}</strong><small>${escapeHTML(s.clinic)}</small></div>
+            <div><strong>${escapeHTML(s.day)}</strong><small>${escapeHTML(s.start_time)} – ${escapeHTML(s.end_time)} WIB</small></div>
+          </article>
+        `).join("")
+      : '<p class="patient-home-empty">Jadwal dokter belum tersedia.</p>';
+  }
+}
+
 function renderSchedules() {
   const isAdmin = currentUser?.role === "admin";
-  const patientDashboard = $("#patient-home-dashboard");
-  const adminDashboard = $("#admin-schedule-dashboard");
-  if (patientDashboard) patientDashboard.classList.toggle("hidden", isAdmin);
-  if (adminDashboard) adminDashboard.classList.toggle("hidden", !isAdmin);
-  if (!isAdmin && patientDashboard) {
-    $("#patient-home-name").textContent = currentUser?.name || "Pengguna";
-    $("#patient-home-full-name").textContent = currentUser?.name || "Belum tersedia";
-    $("#patient-home-npm").textContent = currentUser?.npm || currentUser?.student_id || "Belum tersedia";
-    $("#patient-home-study").textContent = currentUser?.program_studi || currentUser?.study_program || "Belum tersedia";
-    const ownQueues = queues.filter(q => q.patientEmail?.toLowerCase() === currentUser?.email?.toLowerCase());
-    $("#patient-home-queue-total").textContent = ownQueues.length;
-    const q = ownQueues[0];
-    $("#patient-home-queue").innerHTML = q ? `<div class="patient-home-record"><strong>No. ${escapeHTML(q.number)}</strong><span>${escapeHTML(q.date || "—")}</span><span>${escapeHTML(q.clinic || "Layanan klinik")}</span>${statusBadge(q.status)}</div>` : '<p class="patient-home-empty">Belum ada riwayat antrean. Silakan ambil antrean untuk mendaftar kunjungan.</p>';
-    const ownOrders = orders.filter(o => o.patientEmail?.toLowerCase() === currentUser?.email?.toLowerCase());
-    $("#patient-home-order-total").textContent = ownOrders.length;
-    const o = ownOrders[0];
-    $("#patient-home-orders").innerHTML = o ? `<div class="patient-home-record"><strong>${escapeHTML(o.items?.[0]?.name || "Pesanan obat")}</strong><span>${escapeHTML(o.date || o.createdAt || "—")}</span><span>${o.items?.length || 0} item</span>${statusBadge(o.status || "Menunggu")}</div>` : '<p class="patient-home-empty">Belum ada riwayat pesanan obat.</p>';
-    $("#patient-home-schedules").innerHTML = schedules.length ? schedules.slice(0, 4).map(s => `<article class="patient-home-schedule"><span class="patient-home-icon">♡</span><div><strong>${escapeHTML(s.doctor_name)}</strong><small>${escapeHTML(s.clinic)}</small></div><div><strong>${escapeHTML(s.day)}</strong><small>${escapeHTML(s.start_time)} – ${escapeHTML(s.end_time)}</small></div></article>`).join("") : '<p class="patient-home-empty">Jadwal dokter belum tersedia.</p>';
-    return;
-  }
-  $("#add-schedule-btn").classList.toggle("hidden", !isAdmin);
-  $("#jadwal-admin-table").classList.toggle("hidden", !isAdmin);
-  $("#jadwal-patient-grid").classList.toggle("hidden", isAdmin);
+  const addBtn = $("#add-schedule-btn");
+  const adminTable = $("#jadwal-admin-table");
+  const patientGrid = $("#jadwal-patient-grid");
+
+  if (addBtn) addBtn.classList.toggle("hidden", !isAdmin);
+  if (adminTable) adminTable.classList.toggle("hidden", !isAdmin);
+  if (patientGrid) patientGrid.classList.toggle("hidden", isAdmin);
 
   if (isAdmin) {
-    $("#jadwal-subtitle").textContent = "Lihat dan kelola jadwal praktek dokter klinik.";
-    $("#jadwal-list-desc").textContent = "Admin dapat menambah, mengedit, atau menghapus jadwal dokter.";
-    $("#admin-jadwal-body").innerHTML = schedules.length
-      ? schedules.map(s => `
-        <tr>
-          <td><strong>${escapeHTML(s.doctor_name)}</strong></td>
-          <td>${escapeHTML(s.clinic)}</td>
-          <td>${escapeHTML(s.day)}</td>
-          <td>${escapeHTML(s.start_time)} - ${escapeHTML(s.end_time)}</td>
-          <td>${s.is_active ? '<span class="status done">Aktif</span>' : '<span class="status waiting">Nonaktif</span>'}</td>
-          <td>
-            <div class="action-group">
-              <button class="row-action" data-edit-schedule="${s.id}">Edit</button>
-              <button class="row-action danger" data-delete-schedule="${s.id}">Hapus</button>
-            </div>
-          </td>
-        </tr>
-      `).join("")
-      : '<tr><td colspan="6" class="empty-cell">Belum ada data jadwal dokter.</td></tr>';
+    if ($("#jadwal-subtitle")) $("#jadwal-subtitle").textContent = "Lihat dan kelola jadwal praktek dokter klinik.";
+    if ($("#jadwal-list-desc")) $("#jadwal-list-desc").textContent = "Admin dapat menambah, mengedit, atau menghapus jadwal dokter.";
+    if ($("#admin-jadwal-body")) {
+      $("#admin-jadwal-body").innerHTML = schedules.length
+        ? schedules.map(s => `
+          <tr>
+            <td><strong>${escapeHTML(s.doctor_name)}</strong></td>
+            <td>${escapeHTML(s.clinic)}</td>
+            <td>${escapeHTML(s.day)}</td>
+            <td>${escapeHTML(s.start_time)} - ${escapeHTML(s.end_time)}</td>
+            <td>${s.is_active ? '<span class="status done">Aktif</span>' : '<span class="status waiting">Nonaktif</span>'}</td>
+            <td>
+              <div class="action-group">
+                <button class="row-action" data-edit-schedule="${s.id}">Edit</button>
+                <button class="row-action danger" data-delete-schedule="${s.id}">Hapus</button>
+              </div>
+            </td>
+          </tr>
+        `).join("")
+        : '<tr><td colspan="6" class="empty-cell">Belum ada data jadwal dokter.</td></tr>';
 
-    $$("[data-edit-schedule]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const s = schedules.find(item => item.id === Number(btn.dataset.editSchedule));
-        if (!s) return;
-        openModal(
-          "Edit Jadwal Dokter",
-          `<label>Nama Dokter</label>
-           <input name="doctor_name" value="${escapeHTML(s.doctor_name)}" required />
-           <label>Poli</label>
-           <input name="clinic" value="${escapeHTML(s.clinic)}" required />
-           <div class="form-row">
-             <div>
-               <label>Hari</label>
-               <select name="day">
-                 ${['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'].map(d => `<option ${s.day === d ? 'selected' : ''}>${d}</option>`).join("")}
-               </select>
+      $$("[data-edit-schedule]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const s = schedules.find(item => item.id === Number(btn.dataset.editSchedule));
+          if (!s) return;
+          openModal(
+            "Edit Jadwal Dokter",
+            `<label>Nama Dokter</label>
+             <input name="doctor_name" value="${escapeHTML(s.doctor_name)}" required />
+             <label>Poli</label>
+             <input name="clinic" value="${escapeHTML(s.clinic)}" required />
+             <div class="form-row">
+               <div>
+                 <label>Hari</label>
+                 <select name="day">
+                   ${['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'].map(d => `<option ${s.day === d ? 'selected' : ''}>${d}</option>`).join("")}
+                 </select>
+               </div>
+               <div>
+                 <label>Status</label>
+                 <select name="is_active">
+                   <option value="1" ${s.is_active ? 'selected' : ''}>Aktif</option>
+                   <option value="0" ${!s.is_active ? 'selected' : ''}>Nonaktif</option>
+                 </select>
+               </div>
              </div>
-             <div>
-               <label>Status</label>
-               <select name="is_active">
-                 <option value="1" ${s.is_active ? 'selected' : ''}>Aktif</option>
-                 <option value="0" ${!s.is_active ? 'selected' : ''}>Nonaktif</option>
-               </select>
-             </div>
-           </div>
-           <div class="form-row">
-             <div>
-               <label>Jam Mulai</label>
-               <input name="start_time" type="time" value="${escapeHTML(s.start_time)}" required />
-             </div>
-             <div>
-               <label>Jam Selesai</label>
-               <input name="end_time" type="time" value="${escapeHTML(s.end_time)}" required />
-             </div>
-           </div>`,
-          async form => {
-            const data = Object.fromEntries(new FormData(form).entries());
-            await api(`/api/doctor-schedules/${s.id}`, {
-              method: 'PUT',
-              body: JSON.stringify({
-                doctor_name: data.doctor_name.trim(),
-                clinic: data.clinic.trim(),
-                day: data.day,
-                start_time: data.start_time,
-                end_time: data.end_time,
-                is_active: Number(data.is_active)
-              })
-            });
+             <div class="form-row">
+               <div>
+                 <label>Jam Mulai</label>
+                 <input name="start_time" type="time" value="${escapeHTML(s.start_time)}" required />
+               </div>
+               <div>
+                 <label>Jam Selesai</label>
+                 <input name="end_time" type="time" value="${escapeHTML(s.end_time)}" required />
+               </div>
+             </div>`,
+            async form => {
+              const data = Object.fromEntries(new FormData(form).entries());
+              await api(`/api/doctor-schedules/${s.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                  doctor_name: data.doctor_name.trim(),
+                  clinic: data.clinic.trim(),
+                  day: data.day,
+                  start_time: data.start_time,
+                  end_time: data.end_time,
+                  is_active: Number(data.is_active)
+                })
+              });
+              await refreshData();
+              renderSchedules();
+              toast("Jadwal dokter berhasil diperbarui");
+            }
+          );
+        });
+      });
+
+      $$("[data-delete-schedule]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Hapus jadwal ini?")) return;
+          const id = Number(btn.dataset.deleteSchedule);
+          try {
+            await api(`/api/doctor-schedules/${id}`, { method: 'DELETE' });
             await refreshData();
             renderSchedules();
-            toast("Jadwal dokter berhasil diperbarui");
+            toast("Jadwal dokter dihapus");
+          } catch (err) {
+            toast(err.message);
           }
-        );
+        });
       });
-    });
-
-    $$("[data-delete-schedule]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        if (!confirm("Hapus jadwal ini?")) return;
-        const id = Number(btn.dataset.deleteSchedule);
-        try {
-          await api(`/api/doctor-schedules/${id}`, { method: 'DELETE' });
-          await refreshData();
-          renderSchedules();
-          toast("Jadwal dokter dihapus");
-        } catch (err) {
-          toast(err.message);
-        }
-      });
-    });
+    }
   } else {
-    $("#jadwal-subtitle").textContent = "Daftar jadwal praktek dokter yang tersedia di Klinik Polinela.";
-    $("#jadwal-list-desc").textContent = "Silakan datang sesuai hari dan jam praktek dokter.";
-    const activeSchedules = schedules.filter(s => s.is_active);
-    $("#jadwal-patient-grid").innerHTML = activeSchedules.length
-      ? activeSchedules.map(s => `
-        <div class="info-obat-card">
-          <div class="info-obat-header">
-            <div class="patient-avatar" style="width:40px;height:40px;font-size:12px;">DR</div>
-            <div>
-              <strong>${escapeHTML(s.doctor_name)}</strong>
-              <small>${escapeHTML(s.clinic)}</small>
+    if ($("#jadwal-subtitle")) $("#jadwal-subtitle").textContent = "Daftar jadwal praktek dokter yang tersedia di Klinik Polinela.";
+    if ($("#jadwal-list-desc")) $("#jadwal-list-desc").textContent = "Silakan datang sesuai hari dan jam praktek dokter.";
+    if (patientGrid) {
+      const activeSchedules = schedules.filter(s => s.is_active);
+      patientGrid.innerHTML = activeSchedules.length
+        ? activeSchedules.map(s => `
+          <div class="patient-home-schedule" style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+            <div class="patient-avatar" style="width:42px;height:42px;font-size:13px;border-radius:10px;">DR</div>
+            <div style="flex:1; margin-left:12px;">
+              <strong style="font-size:15px; color:#17365d;">${escapeHTML(s.doctor_name)}</strong>
+              <div class="muted" style="font-size:12px; margin-top:2px;">${escapeHTML(s.clinic)}</div>
+              <div style="margin-top:8px; display:flex; gap:12px; font-size:12px;">
+                <span>📅 <strong>${escapeHTML(s.day)}</strong></span>
+                <span>⏰ <strong>${escapeHTML(s.start_time)} – ${escapeHTML(s.end_time)} WIB</strong></span>
+              </div>
             </div>
-            <span class="status done">Aktif</span>
+            <span class="status done" style="align-self:flex-start;">Aktif</span>
           </div>
-          <div style="font-size:11px; margin-top:8px; line-height: 1.6; color: var(--muted);">
-            <div><span style="color: var(--teal); font-weight: 700;">HARI</span> ${escapeHTML(s.day).toUpperCase()}</div>
-            <div><span style="color: var(--teal); font-weight: 700;">JAM</span> ${escapeHTML(s.start_time)} - ${escapeHTML(s.end_time)}</div>
-          </div>
-        </div>
-      `).join("")
-      : '<p class="muted" style="padding:1.5rem;text-align:center">Tidak ada jadwal dokter aktif saat ini.</p>';
+        `).join("")
+        : '<p class="muted" style="padding:1.5rem;text-align:center">Tidak ada jadwal dokter aktif saat ini.</p>';
+    }
   }
 }
 
@@ -1226,6 +1391,7 @@ async function confirmCart() {
     await refreshData();
     await loadOrders();
     renderOrderHistory();
+    renderPatientHome();
     renderInfoObat();
     renderMedicines();
     renderHome();
@@ -1386,6 +1552,7 @@ async function cancelOrder(orderId) {
     await refreshData();
     await loadOrders();
     renderOrderHistory();
+    renderPatientHome();
     renderInfoObat();
     renderMedicines();
     renderHome();
@@ -1749,7 +1916,10 @@ function createQueueForm(patientMode) {
       await refreshData();
       renderQueues();
       renderHome();
-      if (patientMode) renderPatientQueues();
+      if (patientMode) {
+        renderPatientHome();
+        renderPatientQueues();
+      }
 
       // Trigger success ticket modal
       showSuccessTicketModal(res && res.id ? res.id : newQ);
@@ -2033,7 +2203,9 @@ function startPolling() {
       renderQueues();
       renderHome();
       renderAdminOrders();
+      renderSchedules();
     } else {
+      renderPatientHome();
       renderPatientQueues();
       renderSchedules();
       renderOrderHistory();

@@ -11,7 +11,7 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const FRONTEND_DIR = path.resolve(ROOT_DIR, 'frontend');
 const DB_PATH = path.resolve(ROOT_DIR, 'database', 'clinic.db');
 const SCHEMA_PATH = path.resolve(ROOT_DIR, 'database', 'schema.sql');
-const PORT = Number(process.env.PORT || process.argv[2]) || 3000;
+const PORT = Number(process.env.PORT || process.argv[2]) || 3500;
 
 // Inisialisasi Database SQLite dengan performa optimal
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
@@ -81,7 +81,7 @@ const stmts = {
   updateQueuesUser: db.prepare('UPDATE queues SET patientEmail = ?, name = ? WHERE lower(patientEmail) = lower(?)'),
   getMedicines: db.prepare('SELECT * FROM medicines ORDER BY id ASC'),
   insertMedicine: db.prepare('INSERT INTO medicines (name, category, form, stock, description, dosage, sideEffects, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'),
-  updateMedicine: db.prepare('UPDATE medicines SET stock = ?, image = ?, description = ?, dosage = ?, sideEffects = ? WHERE id = ?'),
+  updateMedicine: db.prepare('UPDATE medicines SET name = ?, category = ?, form = ?, stock = ?, image = ?, description = ?, dosage = ?, sideEffects = ? WHERE id = ?'),
   deleteMedicine: db.prepare('DELETE FROM medicines WHERE id = ?'),
   getSchedules: db.prepare('SELECT * FROM doctor_schedules ORDER BY id ASC'),
   insertSchedule: db.prepare('INSERT INTO doctor_schedules (doctor_name, clinic, day, start_time, end_time, is_active, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)'),
@@ -90,6 +90,7 @@ const stmts = {
   getAllQueues: db.prepare('SELECT * FROM queues ORDER BY id DESC'),
   getQueuesByDate: db.prepare('SELECT * FROM queues WHERE date = ? ORDER BY id DESC'),
   insertQueue: db.prepare('INSERT INTO queues (number, name, doctor, clinic, time, date, createdAt, status, patientEmail, complaint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
+  updateQueue: db.prepare('UPDATE queues SET name = ?, clinic = ?, doctor = ?, time = ?, date = ?, status = ?, complaint = ? WHERE id = ?'),
   updateQueueStatus: db.prepare('UPDATE queues SET status = ? WHERE id = ?'),
   deleteQueue: db.prepare('DELETE FROM queues WHERE id = ?'),
   getOrders: db.prepare('SELECT * FROM orders ORDER BY date DESC'),
@@ -339,12 +340,15 @@ const server = http.createServer(async (req, res) => {
           if (!current) {
             return sendJSON(res, 404, { error: 'Obat tidak ditemukan' });
           }
+          const name = body.name !== undefined ? body.name.trim() : current.name;
+          const category = body.category !== undefined ? body.category.trim() : current.category;
+          const form = body.form !== undefined ? body.form.trim() : current.form;
           const stock = body.stock !== undefined ? Number(body.stock) : current.stock;
           const image = body.image !== undefined ? body.image : current.image;
           const description = body.description !== undefined ? body.description : current.description;
           const dosage = body.dosage !== undefined ? body.dosage : current.dosage;
           const sideEffects = body.sideEffects !== undefined ? body.sideEffects : current.sideEffects;
-          stmts.updateMedicine.run(stock, image, description, dosage, sideEffects, id);
+          stmts.updateMedicine.run(name, category, form, stock, image, description, dosage, sideEffects, id);
           return sendJSON(res, 200, { success: true, id });
         }
         if (method === 'DELETE') {
@@ -438,10 +442,28 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      // PATCH & DELETE /api/queues/:id
+      // PUT, PATCH & DELETE /api/queues/:id
       const queueMatch = pathname.match(/^\/api\/queues\/(\d+)$/);
-      if (queueMatch && (method === 'PATCH' || method === 'DELETE')) {
+      if (queueMatch && (method === 'PUT' || method === 'PATCH' || method === 'DELETE')) {
         const id = Number(queueMatch[1]);
+        if (method === 'PUT') {
+          const body = await parseJSON(req);
+          const { name, clinic, doctor, time, date, status, complaint = '' } = body;
+          if (!name?.trim()) {
+            return sendJSON(res, 400, { error: 'Nama pasien wajib diisi.' });
+          }
+          stmts.updateQueue.run(
+            name.trim(),
+            clinic || 'Poli Umum',
+            doctor || 'dr. Dian',
+            time || '',
+            date || new Date().toISOString().split('T')[0],
+            status || 'Menunggu',
+            complaint ? complaint.trim() : '',
+            id
+          );
+          return sendJSON(res, 200, { success: true, id });
+        }
         if (method === 'PATCH') {
           const { status } = await parseJSON(req);
           if (!['Menunggu', 'Diperiksa', 'Selesai'].includes(status)) {
