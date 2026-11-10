@@ -462,6 +462,159 @@ $("#login-form").addEventListener("submit", async event => {
   }
 });
 
+function renderProfile() {
+  if (!currentUser) return;
+  const isAdmin = currentUser.role === "admin";
+
+  // ponytail: diferensiasi UI profil berbasis role admin vs pasien
+  const eyebrow = $("#profile-eyebrow");
+  if (eyebrow) eyebrow.textContent = isAdmin ? "PENGATURAN AKUN ADMINISTRATOR" : "PROFIL PASIEN";
+  const title = $("#profile-title");
+  if (title) title.textContent = isAdmin ? "Profil Administrator" : "Profil Pasien";
+  const desc = $("#profile-desc");
+  if (desc) desc.textContent = isAdmin
+    ? "Kelola akun staf pengelola dan akses sistem manajemen klinik."
+    : "Informasi identitas diri, data kontak, dan riwayat kesehatan pasien.";
+
+  const cover = $("#profile-cover");
+  if (cover) {
+    cover.style.background = isAdmin
+      ? "linear-gradient(125deg, #17365d, #087db5)"
+      : "linear-gradient(125deg, #1d7f72, #49b39b)";
+  }
+
+  const headingName = $("#profile-heading-name");
+  if (headingName) headingName.textContent = currentUser.name || "Pengguna";
+
+  const statusPreview = $("#profile-status-preview");
+  if (statusPreview) {
+    statusPreview.textContent = isAdmin
+      ? "Administrator Sistem"
+      : formatProfileStatus(currentUser.status || "mahasiswa");
+  }
+
+  const pillBadge = $("#profile-pill-badge");
+  if (pillBadge) {
+    pillBadge.className = `pill ${isAdmin ? "admin-pill" : "success-pill"}`;
+    pillBadge.textContent = isAdmin ? "● Akun Administrator" : "● Pasien Terdaftar";
+  }
+
+  const emailPreview = $("#profile-email-preview");
+  if (emailPreview) emailPreview.textContent = currentUser.email || "-";
+
+  const roleDetails = $("#profile-role-details");
+  if (roleDetails) {
+    if (isAdmin) {
+      roleDetails.innerHTML = `
+        <div class="profile-detail">
+            <span>▦</span>
+            <div>
+                <small>Unit Kerja</small>
+                <strong>Klinik Polinela</strong>
+            </div>
+        </div>
+        <div class="profile-detail">
+            <span>⚿</span>
+            <div>
+                <small>Hak Akses</small>
+                <strong>Administrator Penuh</strong>
+            </div>
+        </div>
+        <div class="profile-detail">
+            <span>☎</span>
+            <div>
+                <small>Kontak Petugas</small>
+                <strong>${escapeHTML(currentUser.phone || "-")}</strong>
+            </div>
+        </div>
+      `;
+    } else {
+      const ownQueues = queues.filter(q => q.patientEmail && q.patientEmail.toLowerCase() === currentUser.email?.toLowerCase());
+      const userId = Number(currentUser.id) || 0;
+      const ownOrders = orders.filter(o => (Number(o.userId) || 0) === userId || (o.name && o.name.toLowerCase() === currentUser.name?.toLowerCase()));
+      roleDetails.innerHTML = `
+        <div class="profile-detail">
+            <span>☎</span>
+            <div>
+                <small>Nomor HP / WhatsApp</small>
+                <strong>${escapeHTML(currentUser.phone || "-")}</strong>
+            </div>
+        </div>
+        <div class="profile-detail">
+            <span>⏳</span>
+            <div>
+                <small>Usia Pasien</small>
+                <strong>${currentUser.age ? `${currentUser.age} Tahun` : "-"}</strong>
+            </div>
+        </div>
+        <div class="profile-detail">
+            <span>☷</span>
+            <div>
+                <small>Riwayat Antrean</small>
+                <strong>${ownQueues.length} Kunjungan</strong>
+            </div>
+        </div>
+        <div class="profile-detail">
+            <span>▤</span>
+            <div>
+                <small>Riwayat Pesanan Obat</small>
+                <strong>${ownOrders.length} Pesanan</strong>
+            </div>
+        </div>
+      `;
+    }
+  }
+
+  const formHeading = $("#profile-form-heading");
+  if (formHeading) formHeading.textContent = isAdmin ? "Informasi Administrator" : "Informasi Pasien";
+  const formDesc = $("#profile-form-desc");
+  if (formDesc) formDesc.textContent = isAdmin
+    ? "Perbarui informasi kontak dan identitas staf pengelola klinik."
+    : "Perbarui identitas dan data kesehatan Anda untuk layanan klinik.";
+
+  const labelName = $("#profile-label-name");
+  if (labelName) labelName.textContent = isAdmin ? "Nama Lengkap Petugas" : "Nama Lengkap Pasien";
+
+  const labelPhone = $("#profile-label-phone");
+  if (labelPhone) labelPhone.textContent = isAdmin ? "Nomor HP Petugas" : "Nomor WhatsApp / HP";
+
+  const labelBio = $("#profile-label-bio");
+  if (labelBio) labelBio.textContent = isAdmin ? "Catatan / Deskripsi Petugas" : "Riwayat Alergi & Catatan Medis";
+
+  const bioInput = $("#profile-bio");
+  if (bioInput) {
+    bioInput.value = currentUser.bio || "";
+    bioInput.placeholder = isAdmin
+      ? "Tuliskan deskripsi atau catatan tugas staf..."
+      : "Tuliskan jika memiliki riwayat penyakit, alergi obat (contoh: alergi penisilin), atau catatan penting...";
+  }
+
+  $("#profile-group-status")?.classList.toggle("hidden", isAdmin);
+  $("#profile-group-role")?.classList.toggle("hidden", !isAdmin);
+  $("#profile-group-age")?.classList.toggle("hidden", isAdmin);
+  $("#profile-group-unit")?.classList.toggle("hidden", !isAdmin);
+
+  if ($("#profile-name")) $("#profile-name").value = currentUser.name || "";
+  if ($("#profile-email")) $("#profile-email").value = currentUser.email || "";
+  if ($("#profile-phone")) $("#profile-phone").value = currentUser.phone || "";
+  if ($("#profile-age")) $("#profile-age").value = currentUser.age || "";
+  if ($("#profile-status")) $("#profile-status").value = currentUser.status || (isAdmin ? "administrator" : "mahasiswa");
+  if ($("#profile-photo")) $("#profile-photo").value = "";
+  if ($("#profile-photo-remove-btn")) {
+    $("#profile-photo-remove-btn").disabled = !currentUser.photo;
+  }
+
+  if ($("#top-user-name")) $("#top-user-name").textContent = currentUser.name;
+  if ($("#profile-menu-name")) $("#profile-menu-name").textContent = currentUser.name;
+  if ($("#profile-menu-email")) $("#profile-menu-email").textContent = currentUser.email || "-";
+  if ($("#profile-menu-role")) $("#profile-menu-role").textContent = isAdmin ? "Administrator" : "Pengguna / Pasien";
+  const userChipSmall = $(".user-chip small");
+  if (userChipSmall) userChipSmall.textContent = isAdmin ? "Administrator" : "Pengguna / Pasien";
+
+  $$(".avatar").forEach(el => renderAvatar(el, currentUser.name, currentUser.photo));
+  renderAvatar($("#profile-avatar"), currentUser.name, currentUser.photo);
+}
+
 function startSession() {
   $("#login-screen").classList.add("hidden");
   $("#app").classList.remove("hidden");
@@ -484,34 +637,7 @@ function startSession() {
     brandSubtitle.textContent = isAdmin ? "Management System" : "Layanan Pasien";
   }
 
-  $("#top-user-name").textContent = currentUser.name;
-  $("#profile-menu-name").textContent = currentUser.name;
-  $("#profile-menu-email").textContent = currentUser.email || "-";
-
-  $("#profile-menu-role").textContent = isAdmin ? "Administrator" : "Pengguna / Pasien";
-  $(".user-chip small").textContent = isAdmin ? "Administrator" : "Pengguna / Pasien";
-
-  // Mengisi informasi profil
-  $("#profile-name").value = currentUser.name || "";
-  $("#profile-email").value = currentUser.email || "";
-  $("#profile-phone").value = currentUser.phone || "";
-  $("#profile-age").value = currentUser.age || "";
-
-  $("#profile-status").value = currentUser.status ||
-    (isAdmin ? "civitas akademik" : "mahasiswa");
-
-  $("#profile-bio").value = currentUser.bio || "";
-  $("#profile-photo").value = "";
-
-  $("#profile-heading-name").textContent = currentUser.name;
-  $("#profile-email-preview").textContent = currentUser.email;
-
-  $("#profile-status-preview").textContent =
-    formatProfileStatus($("#profile-status").value);
-
-  renderAvatar($(".avatar"), currentUser.name, currentUser.photo);
-  renderAvatar($(".profile-dropdown-avatar"), currentUser.name, currentUser.photo);
-  renderAvatar($("#profile-avatar"), currentUser.name, currentUser.photo);
+  renderProfile();
 
   $("#home-greeting").innerHTML = isAdmin
     ? 'Selamat datang, Admin! <span class="wave">✦</span>'
@@ -669,6 +795,8 @@ function showPage(page) {
     renderQueues();
   } else if (page === "pasien") {
     renderPatientQueues();
+  } else if (page === "profil") {
+    renderProfile();
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2032,14 +2160,11 @@ $("#queue-filter").addEventListener("change", renderQueues);
 // =====================================
 
 let selectedProfilePhoto = null;
-
+let removeProfilePhoto = false;
 
 // GANTI FOTO PROFIL
-$("#profile-photo").addEventListener("change", async event => {
+$("#profile-photo")?.addEventListener("change", async event => {
     const file = event.target.files[0];
-
-    selectedProfilePhoto = null;
-
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -2055,12 +2180,28 @@ $("#profile-photo").addEventListener("change", async event => {
     }
 
     selectedProfilePhoto = await readFileAsDataURL(file);
+    removeProfilePhoto = false;
 
     renderAvatar(
         $("#profile-avatar"),
         $("#profile-name").value,
         selectedProfilePhoto
     );
+    if ($("#profile-photo-remove-btn")) $("#profile-photo-remove-btn").disabled = false;
+});
+
+// HAPUS FOTO PROFIL
+$("#profile-photo-remove-btn")?.addEventListener("click", () => {
+    selectedProfilePhoto = "";
+    removeProfilePhoto = true;
+    if ($("#profile-photo")) $("#profile-photo").value = "";
+    renderAvatar(
+        $("#profile-avatar"),
+        $("#profile-name").value,
+        ""
+    );
+    if ($("#profile-photo-remove-btn")) $("#profile-photo-remove-btn").disabled = true;
+    toast("Foto profil dilepas. Klik Simpan Perubahan untuk menerapkan.");
 });
 
 
@@ -2069,18 +2210,22 @@ $("#profile-form").addEventListener("submit", async event => {
     event.preventDefault();
 
     if (!currentUser) return;
+    const isAdmin = currentUser.role === "admin";
 
     const name = $("#profile-name").value.trim();
     const email = $("#profile-email").value.trim().toLowerCase();
     const phone = $("#profile-phone").value.trim();
-    const age = $("#profile-age").value
-        ? Number($("#profile-age").value)
-        : "";
-    const status = $("#profile-status").value;
+    const age = isAdmin
+        ? (currentUser.age || null)
+        : ($("#profile-age").value ? Number($("#profile-age").value) : null);
+    const status = isAdmin
+        ? (currentUser.status || "administrator")
+        : ($("#profile-status").value || "mahasiswa");
     const bio = $("#profile-bio").value.trim();
 
-    const photo = selectedProfilePhoto ??
-        currentUser.photo ?? "";
+    const photo = removeProfilePhoto
+        ? ""
+        : (selectedProfilePhoto !== null ? selectedProfilePhoto : (currentUser.photo || ""));
 
     if (!name || !email) {
         toast("Nama dan email wajib diisi!");
@@ -2110,24 +2255,16 @@ $("#profile-form").addEventListener("submit", async event => {
         };
 
         selectedProfilePhoto = null;
-
-        $("#top-user-name").textContent = name;
-        $("#profile-heading-name").textContent = name;
-        $("#profile-email-preview").textContent = email;
-
-        $("#profile-status-preview").textContent =
-            formatProfileStatus(status);
-
-        renderAvatar($(".avatar"), name, photo);
-        renderAvatar($(".profile-dropdown-avatar"), name, photo);
-        renderAvatar($("#profile-avatar"), name, photo);
+        removeProfilePhoto = false;
+        renderProfile();
 
         if (currentUser.role === "patient") {
-            $("#patient-welcome").textContent = `Halo, ${name}!`;
+            if ($("#patient-welcome")) $("#patient-welcome").textContent = `Halo, ${name}!`;
+            renderPatientHome();
             renderPatientQueues();
         }
 
-        toast("Profil berhasil diperbarui!");
+        toast(`Profil ${isAdmin ? "Admin" : "Pasien"} berhasil diperbarui!`);
 
     } catch (err) {
         toast(err.message);
@@ -2138,18 +2275,11 @@ $("#profile-form").addEventListener("submit", async event => {
 $("#profile-form").addEventListener("reset", event => {
     event.preventDefault();
     selectedProfilePhoto = null;
-    $("#profile-photo").value = "";
+    removeProfilePhoto = false;
+    if ($("#profile-photo")) $("#profile-photo").value = "";
 
     if (currentUser) {
-        $("#profile-name").value = currentUser.name || "";
-        $("#profile-email").value = currentUser.email || "";
-        $("#profile-phone").value = currentUser.phone || "";
-        $("#profile-age").value = currentUser.age || "";
-        $("#profile-status").value = currentUser.status || (currentUser.role === "admin" ? "civitas akademik" : "mahasiswa");
-        $("#profile-bio").value = currentUser.bio || "";
-
-        renderAvatar($(".avatar"), currentUser.name, currentUser.photo);
-        renderAvatar($("#profile-avatar"), currentUser.name, currentUser.photo);
+        renderProfile();
         toast("Form profil dikembalikan ke data tersimpan");
     }
 });

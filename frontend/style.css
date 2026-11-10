@@ -607,7 +607,9 @@ select:focus {
     color: var(--teal);
     display: grid;
     place-items: center;
-    font-weight: 800
+    font-weight: 800;
+    overflow: hidden;
+    flex-shrink: 0
 }
 
 .user-chip strong {
@@ -1116,26 +1118,44 @@ td strong {
 
 .profile-cover {
     height: 95px;
-    background: linear-gradient(125deg, #2A5D89, #a6c8e3)
+    background: linear-gradient(125deg, #2A5D89, #a6c8e3);
+    margin: 0 -23px
 }
 
 .profile-avatar {
-    height: 76px;
-    width: 76px;
+    height: 84px;
+    width: 84px;
     border-radius: 50%;
-    border: 5px solid white;
+    border: 4px solid white;
     background: #d8e8f4;
     color: var(--teal);
-    display: grid;
-    place-items: center;
-    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
     font-weight: 800;
-    margin: -38px auto 12px;
-    position: relative
+    margin: -42px auto 14px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(23, 54, 93, .12)
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block
 }
 
 .profile-card h2 {
     margin-bottom: 5px
+}
+
+.admin-pill {
+    background: #e8f5fc;
+    color: #087db5;
+    margin-top: 15px
 }
 
 .success-pill {
@@ -1195,6 +1215,68 @@ td strong {
 
 .profile-form textarea {
     resize: vertical
+}
+
+.profile-photo-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-photo-control input[type="file"] {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    font-size: 11px;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    background: #fbfcfd;
+    cursor: pointer;
+}
+
+.profile-photo-control input[type="file"]::file-selector-button {
+    border: 1px solid var(--line);
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--navy);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: background .15s ease;
+}
+
+.profile-photo-control input[type="file"]::file-selector-button:hover {
+    background: #e8f5fc;
+    color: var(--teal);
+}
+
+.profile-photo-btn-remove {
+    padding: 6px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+    border-color: #f5c2c2;
+    color: #dc4545;
+}
+
+.profile-photo-btn-remove:hover:not(:disabled) {
+    background: #fff1f1;
+    border-color: #dc4545;
+}
+
+.profile-photo-btn-remove:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+    border-color: var(--line);
+    color: var(--muted);
+}
+
+.profile-hint {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 5px;
 }
 
 .form-actions {

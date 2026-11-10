@@ -1,25 +1,23 @@
-      <!-- Page: Profil (Both Admin & Patient) -->
+      <!-- Page: Profil (Diferensiasi Admin & Pasien) -->
       <section class="page" id="page-profil">
         <div class="page-heading">
           <div>
-            <p class="eyebrow">PENGATURAN AKUN</p>
-            <h1>Profil Pengguna</h1>
-            <p class="muted">Informasi akun dan data pribadi.</p>
+            <p class="eyebrow" id="profile-eyebrow">PENGATURAN AKUN</p>
+            <h1 id="profile-title">Profil Pengguna</h1>
+            <p class="muted" id="profile-desc">Informasi akun dan data pribadi.</p>
           </div>
         </div>
 
         <div class="profile-layout">
     <article class="panel profile-card">
-        <div class="profile-cover"></div>
+        <div class="profile-cover" id="profile-cover"></div>
 
         <div class="profile-avatar" id="profile-avatar">A</div>
 
-        <h2 id="profile-heading-name">Admin Klinik</h2>
-        <p class="muted" id="profile-status-preview">
-            Civitas Akademik
-        </p>
+        <h2 id="profile-heading-name">Pengguna</h2>
+        <p class="muted" id="profile-status-preview">Status</p>
 
-        <span class="pill success-pill">● Akun aktif</span>
+        <span class="pill" id="profile-pill-badge">● Akun aktif</span>
 
         <div class="profile-divider"></div>
 
@@ -27,26 +25,18 @@
             <span>✉</span>
             <div>
                 <small>Email</small>
-                <strong id="profile-email-preview">
-                    adminklinik@polinela.ac.id
-                </strong>
+                <strong id="profile-email-preview">-</strong>
             </div>
         </div>
 
-        <div class="profile-detail">
-            <span>▦</span>
-            <div>
-                <small>Unit kerja</small>
-                <strong>Klinik Polinela</strong>
-            </div>
-        </div>
+        <div id="profile-role-details"></div>
     </article>
 
     <article class="panel profile-form-panel">
         <div class="panel-heading">
             <div>
-                <h2>Informasi pribadi</h2>
-                <p class="muted">
+                <h2 id="profile-form-heading">Informasi Pribadi</h2>
+                <p class="muted" id="profile-form-desc">
                     Ubah informasi profil di bawah ini.
                 </p>
             </div>
@@ -56,7 +46,7 @@
 
             <div class="form-row">
                 <div>
-                    <label for="profile-name">Nama lengkap</label>
+                    <label for="profile-name" id="profile-label-name">Nama Lengkap</label>
                     <input
                         id="profile-name"
                         type="text"
@@ -75,20 +65,27 @@
             </div>
 
             <div class="form-row">
-                <div>
-                    <label for="profile-status">Status</label>
-
-                    <select id="profile-status" required>
+                <div id="profile-group-status">
+                    <label for="profile-status">Status Pasien</label>
+                    <select id="profile-status">
                         <option value="mahasiswa">Mahasiswa</option>
                         <option value="dosen">Dosen</option>
-                        <option value="civitas akademik">
-                            Civitas Akademik
-                        </option>
+                        <option value="civitas akademik">Civitas Akademik</option>
                     </select>
                 </div>
 
+                <div id="profile-group-role" class="hidden">
+                    <label for="profile-role-display">Peran / Jabatan</label>
+                    <input
+                        id="profile-role-display"
+                        type="text"
+                        value="Administrator Klinik"
+                        disabled
+                    />
+                </div>
+
                 <div>
-                    <label for="profile-phone">Nomor HP</label>
+                    <label for="profile-phone" id="profile-label-phone">Nomor HP</label>
                     <input
                         id="profile-phone"
                         type="tel"
@@ -98,24 +95,37 @@
             </div>
 
             <div class="form-row">
-                <div>
-                    <label for="profile-age">Umur</label>
+                <div id="profile-group-age">
+                    <label for="profile-age">Umur (Tahun)</label>
                     <input
                         id="profile-age"
                         type="number"
                         min="1"
                         max="120"
-                        placeholder="Masukkan umur"
+                        placeholder="Contoh: 21"
                     />
                 </div>
 
-                <div>
-                    <label for="profile-photo">Foto profil</label>
+                <div id="profile-group-unit" class="hidden">
+                    <label for="profile-unit-display">Unit Penugasan</label>
                     <input
-                        id="profile-photo"
-                        type="file"
-                        accept="image/*"
+                        id="profile-unit-display"
+                        type="text"
+                        value="Klinik Pratama Polinela"
+                        disabled
                     />
+                </div>
+
+                <div class="profile-photo-group">
+                    <label for="profile-photo">Foto Profil</label>
+                    <div class="profile-photo-control">
+                        <input
+                            id="profile-photo"
+                            type="file"
+                            accept="image/*"
+                        />
+                        <button type="button" class="btn outline profile-photo-btn-remove" id="profile-photo-remove-btn" title="Hapus foto profil">Hapus</button>
+                    </div>
 
                     <small class="profile-hint">
                         Format JPG, PNG, atau WEBP. Maksimal 2 MB.
@@ -124,7 +134,7 @@
             </div>
 
             <div>
-                <label for="profile-bio">About Me</label>
+                <label for="profile-bio" id="profile-label-bio">About Me</label>
                 <textarea
                     id="profile-bio"
                     rows="4"

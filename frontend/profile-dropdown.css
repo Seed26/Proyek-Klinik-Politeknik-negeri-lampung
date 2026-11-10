@@ -10,7 +10,7 @@
 .profile-dropdown { position: absolute; top: calc(100% + 12px); right: 0; width: 300px; padding: 10px; background: #fff; border: 1px solid #e5eaf0; border-radius: 14px; box-shadow: 0 14px 32px rgba(23,54,93,.14); z-index: 100; animation: profile-dropdown-in .2s ease both; }
 .profile-dropdown.hidden { display: none; }
 .profile-dropdown-user { display: flex; align-items: center; gap: 12px; padding: 10px 8px 14px; border-bottom: 1px solid #e5eaf0; }
-.profile-dropdown-avatar { width: 48px; height: 48px; flex: 0 0 48px; background: #e8f5fc; color: #087db5; }
+.profile-dropdown-avatar { width: 48px; height: 48px; flex: 0 0 48px; background: #e8f5fc; color: #087db5; overflow: hidden; border-radius: 50%; }
 .profile-dropdown-user strong, .profile-dropdown-user small { display: block; }
 .profile-dropdown-user strong { color: #17365d; font-size: 13px; }
 .profile-dropdown-user small { margin-top: 4px; color: #879598; font-size: 10px; }

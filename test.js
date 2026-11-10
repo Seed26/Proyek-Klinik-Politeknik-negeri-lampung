@@ -43,6 +43,13 @@ const resUpdateUser = await fetch(`http://localhost:${PORT}/api/users/${patientU
 });
 assert.strictEqual(resUpdateUser.status, 200);
 
+const resUpdateAdmin = await fetch(`http://localhost:${PORT}/api/users/${admin.id}`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Admin Klinik', email: admin.email, phone: '0812-3456-7890', bio: 'Catatan admin', status: 'administrator' })
+});
+assert.strictEqual(resUpdateAdmin.status, 200);
+
 // Test queues
 const resQueue = await fetch(`http://localhost:${PORT}/api/queues`, {
   method: 'POST',
