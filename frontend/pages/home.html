@@ -1,0 +1,106 @@
+      <!-- Page: Home (Admin Dashboard) -->
+      <section class="page active" id="page-home">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">DASHBOARD</p>
+            <h1 id="home-greeting">Selamat datang, Admin! <span class="wave">✦</span></h1>
+            <p class="muted" id="home-description">Berikut ringkasan aktivitas klinik hari ini.</p>
+          </div>
+          <div class="date-chip">
+            <span>▦</span>
+            <input type="date" id="dashboard-date" aria-label="Pilih tanggal laporan" />
+            <button type="button" id="today-date-btn">Hari ini</button>
+            <span id="selected-date-label" class="selected-date-label"></span>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Pasien pada Tanggal Ini</span>
+              <span class="stat-icon teal">♙</span>
+            </div>
+            <strong id="stat-patients">0</strong>
+            <div class="stat-foot">
+              <span class="positive">Pasien unik</span> <span>pada tanggal pilihan</span>
+            </div>
+            <div class="sparkline">▁▃▂▅▄▆▅▇</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Total Antrian</span>
+              <span class="stat-icon blue">☷</span>
+            </div>
+            <strong id="stat-queue">0</strong>
+            <div class="stat-foot">
+              <span class="positive" id="stat-waiting">0 pasien</span> <span>sedang menunggu</span>
+            </div>
+            <div class="sparkline blue-line">▂▃▅▄▆▃▅▇</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Jenis Obat</span>
+              <span class="stat-icon purple">▤</span>
+            </div>
+            <strong id="stat-medicine">6</strong>
+            <div class="stat-foot">
+              <span class="neutral">Tersedia</span> <span>di inventaris</span>
+            </div>
+            <div class="sparkline purple-line">▃▂▄▅▃▆▄▇</div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-top">
+              <span>Tenaga Medis</span>
+              <span class="stat-icon orange">♡</span>
+            </div>
+            <strong>4</strong>
+            <div class="stat-foot">
+              <span class="neutral">2 dokter</span> <span>· 2 perawat</span>
+            </div>
+            <div class="sparkline orange-line">▂▄▃▅▄▆▅▇</div>
+          </article>
+        </div>
+
+        <div class="content-grid">
+          <article class="panel queue-panel">
+            <div class="panel-heading">
+              <div>
+                <h2 id="home-queue-heading">Antrian pada Tanggal Ini</h2>
+                <p class="muted" id="home-queue-description">Daftar kunjungan sesuai tanggal yang dipilih.</p>
+              </div>
+              <button class="text-btn" data-goto="antrian">Lihat semua →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>No. Antrian</th>
+                    <th>Nama Pasien</th>
+                    <th>Dokter</th>
+                    <th>Waktu</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="home-queue-body"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel medicine-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Stok obat</h2>
+                <p class="muted">Stok obat yang dikelola admin</p>
+              </div>
+              <button class="dots-btn" data-goto="obat" aria-label="Lihat daftar obat" title="Lihat daftar obat">•••</button>
+            </div>
+            <div id="home-medicine-list" class="medicine-list"></div>
+            <button class="btn outline full" data-goto="obat">Lihat daftar obat <span>→</span></button>
+          </article>
+        </div>
+
+        <div class="footer-note">© 2026 Klinik Polinela · Prototype antarmuka</div>
+      </section>

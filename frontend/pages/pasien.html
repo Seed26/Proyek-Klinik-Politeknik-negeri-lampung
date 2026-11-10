@@ -1,0 +1,70 @@
+      <!-- Page: Antrian Pasien (Patient Only) -->
+      <section class="page" id="page-pasien">
+        <div class="welcome-row">
+          <div>
+            <p class="eyebrow">AREA PASIEN / MAHASISWA</p>
+            <h1 id="patient-welcome">Halo, Pengguna!</h1>
+            <p class="muted">Daftarkan kunjungan dan pantau status antrian pemeriksaanmu di Klinik Polinela.</p>
+          </div>
+          <div class="date-chip">▦ <span id="patient-date">Hari ini</span></div>
+        </div>
+
+        <!-- Banner Informasi Layanan Antrean -->
+        <article class="panel" style="background: linear-gradient(135deg, #e8eff4, #f6f8f9); border-color: #2A5D8933; margin-bottom: 20px; padding: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div>
+              <span class="pill" style="background: var(--teal); color:#fff; margin-bottom:8px;">JAM PELAYANAN KLINIK</span>
+              <h2 style="margin:4px 0 6px; font-size:16px; color: var(--teal-dark);">Senin – Jumat: 08.00 – 15.00 WIB</h2>
+              <p class="muted" style="font-size:12px;">Pendaftaran online dibuka setiap hari kerja. Silakan ambil antrean dan datang sesuai jadwal.</p>
+            </div>
+            <button id="patient-start-queue-flow" class="btn primary">Ambil Antrean <span>→</span></button>
+          </div>
+        </article>
+
+        <div class="patient-action-card">
+          <div>
+            <span class="stat-icon teal">＋</span>
+            <h2>Butuh pemeriksaan kesehatan?</h2>
+            <p class="muted">Pilih layanan konsultasi dan tentukan jadwal kunjungan Anda.</p>
+          </div>
+          <button id="patient-add-queue-btn" class="btn primary">Daftar Antrian Baru</button>
+        </div>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Antrian Saya &amp; Riwayat</h2>
+              <p class="muted">Pantau status antrian aktif dan riwayat kunjungan Anda.</p>
+            </div>
+            <div class="table-filters">
+              <select id="patient-queue-filter" class="select-input" onchange="filterPatientQueues(this.value)">
+                <option value="Semua">Semua Status</option>
+                <option value="Menunggu">Menunggu</option>
+                <option value="Diperiksa">Diperiksa</option>
+                <option value="Selesai">Selesai</option>
+                <option value="Dibatalkan">Dibatalkan</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>No. Antrian</th>
+                  <th>Layanan</th>
+                  <th>Dokter</th>
+                  <th>Waktu / Tanggal</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="patient-queue-body"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel patient-info-panel">
+          <h2>Informasi Prosedur</h2>
+          <p class="muted">Silakan datang sesuai nomor antrian dan tunjukkan bukti pendaftaran digital (tiket/struk) ke petugas pendaftaran klinik.</p>
+        </article>
+      </section>

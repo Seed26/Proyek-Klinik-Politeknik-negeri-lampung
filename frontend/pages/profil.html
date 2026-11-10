@@ -1,0 +1,148 @@
+      <!-- Page: Profil (Both Admin & Patient) -->
+      <section class="page" id="page-profil">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">PENGATURAN AKUN</p>
+            <h1>Profil Pengguna</h1>
+            <p class="muted">Informasi akun dan data pribadi.</p>
+          </div>
+        </div>
+
+        <div class="profile-layout">
+    <article class="panel profile-card">
+        <div class="profile-cover"></div>
+
+        <div class="profile-avatar" id="profile-avatar">A</div>
+
+        <h2 id="profile-heading-name">Admin Klinik</h2>
+        <p class="muted" id="profile-status-preview">
+            Civitas Akademik
+        </p>
+
+        <span class="pill success-pill">● Akun aktif</span>
+
+        <div class="profile-divider"></div>
+
+        <div class="profile-detail">
+            <span>✉</span>
+            <div>
+                <small>Email</small>
+                <strong id="profile-email-preview">
+                    adminklinik@polinela.ac.id
+                </strong>
+            </div>
+        </div>
+
+        <div class="profile-detail">
+            <span>▦</span>
+            <div>
+                <small>Unit kerja</small>
+                <strong>Klinik Polinela</strong>
+            </div>
+        </div>
+    </article>
+
+    <article class="panel profile-form-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Informasi pribadi</h2>
+                <p class="muted">
+                    Ubah informasi profil di bawah ini.
+                </p>
+            </div>
+        </div>
+
+        <form id="profile-form" class="profile-form">
+
+            <div class="form-row">
+                <div>
+                    <label for="profile-name">Nama lengkap</label>
+                    <input
+                        id="profile-name"
+                        type="text"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label for="profile-email">Email</label>
+                    <input
+                        id="profile-email"
+                        type="email"
+                        required
+                    />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="profile-status">Status</label>
+
+                    <select id="profile-status" required>
+                        <option value="mahasiswa">Mahasiswa</option>
+                        <option value="dosen">Dosen</option>
+                        <option value="civitas akademik">
+                            Civitas Akademik
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="profile-phone">Nomor HP</label>
+                    <input
+                        id="profile-phone"
+                        type="tel"
+                        placeholder="08xxxxxxxxxx"
+                    />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="profile-age">Umur</label>
+                    <input
+                        id="profile-age"
+                        type="number"
+                        min="1"
+                        max="120"
+                        placeholder="Masukkan umur"
+                    />
+                </div>
+
+                <div>
+                    <label for="profile-photo">Foto profil</label>
+                    <input
+                        id="profile-photo"
+                        type="file"
+                        accept="image/*"
+                    />
+
+                    <small class="profile-hint">
+                        Format JPG, PNG, atau WEBP. Maksimal 2 MB.
+                    </small>
+                </div>
+            </div>
+
+            <div>
+                <label for="profile-bio">About Me</label>
+                <textarea
+                    id="profile-bio"
+                    rows="4"
+                    placeholder="Ceritakan sedikit tentang diri kamu..."
+                ></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="reset" class="btn outline">
+                    Batal
+                </button>
+
+                <button type="submit" class="btn primary">
+                    Simpan Perubahan
+                </button>
+            </div>
+
+        </form>
+    </article>
+</div>
+      </section>

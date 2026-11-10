@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Klinik Polinela — Website</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="profile-dropdown.css" />
+  <link rel="stylesheet" href="patient-home.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" defer></script>
+</head>
+<body>
+  <!-- Login / Register Section -->
+  <section id="login-screen" class="login-screen">
+    <div class="login-card">
+      <img
+        src="assets/logo_klinik-removebg-preview.png"
+        alt="Logo Klinik"
+        class="login-logo"
+      />
+      <p class="eyebrow">KLINIK POLINELA</p>
+      <h1>Selamat datang</h1>
+      <p class="muted">Masuk sebagai admin atau pengguna untuk melanjutkan.</p>
+
+      <form id="login-form">
+        <label for="login-role">Masuk sebagai</label>
+        <select id="login-role" class="select-input login-select">
+          <option value="admin">Admin Klinik</option>
+          <option value="patient">Pengguna / Pasien</option>
+        </select>
+
+        <label for="login-email">Email / Username</label>
+        <input
+          id="login-email"
+          type="text"
+          placeholder="Masukkan username atau email"
+          value="admin"
+          required
+          autocomplete="username"
+        />
+
+        <label for="login-password">Kata sandi</label>
+        <div class="password-wrapper">
+          <input
+            id="login-password"
+            type="password"
+            placeholder="Masukkan kata sandi"
+            value="klinik123"
+            required
+            autocomplete="current-password"
+          />
+          <button type="button" class="toggle-password" data-target="login-password" aria-label="Tampilkan kata sandi">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+
+        <p id="login-error" class="form-error hidden" role="alert"></p>
+        <button class="btn primary full" type="submit">Masuk <span>→</span></button>
+      </form>
+
+      <p class="register-prompt">
+        Belum punya akun pasien?
+        <button type="button" id="show-register" class="inline-link">Daftar di sini</button>
+      </p>
+
+      <form id="register-form" class="register-form hidden">
+        <div class="register-heading">
+          <strong>Buat akun pasien</strong>
+          <span>Isi data untuk membuat akun baru.</span>
+        </div>
+
+        <label for="register-name">Nama lengkap</label>
+        <input id="register-name" name="name" placeholder="Nama sesuai identitas" required />
+
+        <label for="register-email">Email</label>
+        <input id="register-email" name="email" type="email" placeholder="nama@email.com" required />
+
+        <label for="register-password">Kata sandi</label>
+        <div class="password-wrapper">
+          <input
+            id="register-password"
+            name="password"
+            type="password"
+            minlength="6"
+            placeholder="Minimal 6 karakter"
+            required
+          />
+          <button type="button" class="toggle-password" data-target="register-password" aria-label="Tampilkan kata sandi">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+
+        <label for="register-phone">Nomor telepon (opsional)</label>
+        <input id="register-phone" name="phone" type="tel" placeholder="08xxxxxxxxxx" />
+
+        <p id="register-error" class="form-error hidden" role="alert"></p>
+        <button class="btn primary full" type="submit">Buat Akun</button>
+        <button class="btn outline full register-cancel" type="button" id="cancel-register">Kembali ke Login</button>
+      </form>
+    </div>
+
+    <div class="login-side">
+      <div class="side-orb orb-one"></div>
+      <div class="side-orb orb-two"></div>
+      <div class="login-side-content">
+        <span class="pill light-pill">LAYANAN KESEHATAN</span>
+        <h2>Pelayanan yang lebih tertata, untuk semua.</h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Application -->
+  <div id="app" class="app hidden">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/logo_klinik-removebg-preview.png" alt="Logo Klinik Polinela" class="sidebar-logo" />
+        <div class="brand-copy">
+          <strong>Klinik Polinela</strong>
+          <small>Management System</small>
+        </div>
+      </div>
+
+      <div class="nav-caption">MENU UTAMA</div>
+      <nav>
+        <!-- Menu Admin -->
+        <button class="nav-link active" data-page="home"><span class="nav-icon">▦</span> Home / Dashboard</button>
+        <button class="nav-link" data-page="antrian"><span class="nav-icon">☷</span> Antrian</button>
+        <button class="nav-link hidden" data-page="jadwal" id="admin-jadwal-nav"><span class="nav-icon">☖</span> Jadwal Dokter</button>
+        <button class="nav-link" data-page="obat"><span class="nav-icon">▤</span> Data Obat</button>
+
+        <!-- Menu Pasien -->
+        <button class="nav-link hidden" data-page="jadwal" id="patient-jadwal-nav"><span class="nav-icon">☖</span> Home</button>
+        <button class="nav-link hidden" data-page="pasien" id="patient-nav"><span class="nav-icon">▣</span> Antrian Saya</button>
+        <button class="nav-link hidden" data-page="info-obat" id="info-obat-nav"><span class="nav-icon">▤</span> Informasi Obat</button>
+        <button class="nav-link hidden" data-page="lokasi" id="patient-lokasi-nav"><span class="nav-icon">⌖</span> Lokasi Klinik</button>
+
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="help-card" id="help-btn" role="button" tabindex="0" title="Bantuan &amp; Kontak Klinik" style="cursor: pointer;">
+          <div class="help-icon">?</div>
+          <strong>Butuh bantuan?</strong>
+          <p class="muted" style="font-size:11px; margin-top:4px;">Hubungi Layanan Klinik</p>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="mobile-brand">
+          <img src="assets/logo_klinik-removebg-preview.png" alt="Logo Klinik Polinela" class="mobile-logo" />
+          <strong>Klinik Polinela</strong>
+        </div>
+        <div class="breadcrumb">
+          Klinik Polinela <span>/</span> <strong id="breadcrumb-current">Home / Dashboard</strong>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" aria-label="Notifikasi" id="notification-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+          <div class="notification-menu hidden" id="notification-menu">
+            <div class="notification-header">
+              <strong>Notifikasi</strong>
+              <button class="notification-clear" id="notification-clear" aria-label="Bersihkan notifikasi">Bersihkan</button>
+            </div>
+            <ul class="notification-list" id="notification-list"></ul>
+            <p class="notification-empty hidden" id="notification-empty">Belum ada notifikasi.</p>
+          </div>
+          <div class="profile-dropdown-wrapper">
+            <button type="button" class="user-chip" id="profile-menu-toggle" aria-expanded="false" aria-controls="profile-dropdown" title="Buka menu akun">
+              <div class="avatar">A</div>
+              <div class="user-chip-copy">
+                <strong id="top-user-name">Admin Klinik</strong>
+                <small>Administrator</small>
+              </div>
+              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="profile-dropdown hidden" id="profile-dropdown" role="menu">
+              <div class="profile-dropdown-user">
+                <div class="avatar profile-dropdown-avatar">A</div>
+                <div><strong id="profile-menu-name">Admin Klinik</strong><small id="profile-menu-role">Administrator</small><small id="profile-menu-email">-</small></div>
+              </div>
+              <div class="profile-menu-list">
+                <button type="button" class="profile-menu-item" data-goto="profil" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg><span>Profil Saya</span></button>
+                <button type="button" class="profile-menu-item" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4V19a2 2 0 1 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A2 2 0 0 0 3.6 11H3a2 2 0 1 1 0-4h.2A2 2 0 0 0 4.6 3.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 11 3.6V3a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 19.4 11h.2a2 2 0 1 1 0 4h-.2Z"/></svg><span>Pengaturan Akun</span></button>
+                <button type="button" class="profile-menu-logout" id="profile-logout-btn" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M21 19V5a2 2 0 0 0-2-2h-6"/></svg><span>Keluar</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page placeholders — loaded from pages/ folder -->
+      <div id="page-container-home"></div>
+      <div id="page-container-obat"></div>
+      <div id="page-container-antrian"></div>
+      <div id="page-container-pasien"></div>
+      <div id="page-container-lokasi"></div>
+      <div id="page-container-info-obat"></div>
+      <div id="page-container-jadwal"></div>
+      <div id="page-container-profil"></div>
+
+    </main>
+  </div>
+
+  <!-- Reusable Modal Window -->
+  <div id="modal-backdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">FORM DATA</p>
+          <h2 id="modal-title">Tambah Data</h2>
+        </div>
+        <button id="modal-close" class="close-btn" aria-label="Tutup modal">×</button>
+      </div>
+      <form id="modal-form"></form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Load page partials then initialize app -->
+  <script>
+    (async function loadPages() {
+      const pages = [
+        { container: 'page-container-home',     file: 'pages/home.html' },
+        { container: 'page-container-obat',     file: 'pages/obat.html' },
+        { container: 'page-container-antrian',  file: 'pages/antrian.html' },
+        { container: 'page-container-pasien',   file: 'pages/pasien.html' },
+        { container: 'page-container-lokasi',   file: 'pages/lokasi.html' },
+        { container: 'page-container-info-obat',file: 'pages/info-obat.html' },
+        { container: 'page-container-jadwal',   file: 'pages/jadwal.html' },
+        { container: 'page-container-profil',   file: 'pages/profil.html' }
+      ];
+
+      await Promise.all(pages.map(async ({ container, file }) => {
+        try {
+          const res = await fetch(file);
+          if (res.ok) {
+            document.getElementById(container).innerHTML = await res.text();
+          }
+        } catch (e) {
+          console.error('Gagal memuat halaman:', file, e);
+        }
+      }));
+
+      // After all pages are loaded, load the main script
+      const s = document.createElement('script');
+      s.src = 'script.js';
+      document.body.appendChild(s);
+    })();
+  </script>
+</body>
+</html>

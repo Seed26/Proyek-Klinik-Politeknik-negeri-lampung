@@ -1,0 +1,24 @@
+/* Profile dropdown: isolated styling so existing dashboard styles remain unchanged. */
+.profile-dropdown-wrapper { position: relative; z-index: 60; }
+.user-chip { border: 0; background: transparent; padding: 5px 8px; border-radius: 12px; cursor: pointer; color: var(--ink); transition: background .15s ease, transform .15s ease; }
+.user-chip:hover { background: #f3f8fb; }
+.user-chip:active { transform: scale(.98); }
+.user-chip .avatar { width: 40px; height: 40px; background: #e8f5fc; color: #087db5; }
+.user-chip-copy { text-align: left; }
+.user-chip .chevron { margin-left: 8px; transition: transform .2s ease; }
+.user-chip[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+.profile-dropdown { position: absolute; top: calc(100% + 12px); right: 0; width: 300px; padding: 10px; background: #fff; border: 1px solid #e5eaf0; border-radius: 14px; box-shadow: 0 14px 32px rgba(23,54,93,.14); z-index: 100; animation: profile-dropdown-in .2s ease both; }
+.profile-dropdown.hidden { display: none; }
+.profile-dropdown-user { display: flex; align-items: center; gap: 12px; padding: 10px 8px 14px; border-bottom: 1px solid #e5eaf0; }
+.profile-dropdown-avatar { width: 48px; height: 48px; flex: 0 0 48px; background: #e8f5fc; color: #087db5; }
+.profile-dropdown-user strong, .profile-dropdown-user small { display: block; }
+.profile-dropdown-user strong { color: #17365d; font-size: 13px; }
+.profile-dropdown-user small { margin-top: 4px; color: #879598; font-size: 10px; }
+.profile-menu-list { padding-top: 7px; }
+.profile-menu-item, .profile-menu-logout { width: 100%; display: flex; align-items: center; gap: 11px; border: 0; background: transparent; border-radius: 9px; padding: 11px 10px; color: #17365d; font: inherit; font-size: 12px; text-align: left; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.profile-menu-item:hover { background: #e8f5fc; color: #087db5; }
+.profile-menu-item svg, .profile-menu-logout svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.profile-menu-logout { margin-top: 4px; color: #dc4545; }
+.profile-menu-logout:hover { background: #fff1f1; }
+@keyframes profile-dropdown-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 600px) { .profile-dropdown { right: -8px; width: min(300px, calc(100vw - 24px)); } .user-chip-copy, .user-chip .chevron { display: none; } }

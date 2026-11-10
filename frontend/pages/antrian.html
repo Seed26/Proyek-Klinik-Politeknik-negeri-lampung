@@ -1,0 +1,69 @@
+      <!-- Page: Antrian (Admin Only) -->
+      <section class="page" id="page-antrian">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">PELAYANAN PASIEN</p>
+            <h1>Daftar Antrian</h1>
+            <p class="muted">Pantau urutan dan status antrian pasien.</p>
+          </div>
+          <button id="add-queue-btn" class="btn primary">＋ Tambah Antrian</button>
+        </div>
+
+        <div class="queue-summary">
+          <div class="queue-summary-card">
+            <span class="summary-dot waiting"></span>
+            <div>
+              <small>Menunggu</small>
+              <strong id="waiting-count">2</strong>
+            </div>
+          </div>
+          <div class="queue-summary-card">
+            <span class="summary-dot process"></span>
+            <div>
+              <small>Sedang diperiksa</small>
+              <strong id="process-count">1</strong>
+            </div>
+          </div>
+          <div class="queue-summary-card">
+            <span class="summary-dot done"></span>
+            <div>
+              <small>Selesai</small>
+              <strong id="done-count">3</strong>
+            </div>
+          </div>
+        </div>
+
+        <article class="panel">
+          <div class="panel-heading section-tools">
+            <div>
+              <h2>Antrian hari ini</h2>
+              <p class="muted">Admin dapat menambah antrian dan memperbarui status pasien.</p>
+            </div>
+            <div class="table-filters">
+              <input id="queue-search" class="search-input" placeholder="⌕  Cari pasien / NIM..." />
+              <select id="queue-filter" class="select-input">
+                <option value="Semua">Semua status</option>
+                <option>Menunggu</option>
+                <option>Diperiksa</option>
+                <option>Selesai</option>
+                <option>Dibatalkan</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>No. Antrian</th>
+                  <th>Nama Pasien / NIM</th>
+                  <th>Layanan / Poli</th>
+                  <th>Waktu &amp; Tanggal</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="queue-table-body"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
