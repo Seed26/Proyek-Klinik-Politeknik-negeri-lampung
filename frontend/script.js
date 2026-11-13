@@ -13,20 +13,6 @@ let selectedDashboardDate = todayKey;
 
 // Penyimpanan lokal: aplikasi berjalan langsung lewat Live Server tanpa Node.js/database.
 const STORE = 'klinik-polinela-v1';
-const DEFAULT_ADMIN = {
-  id: 1,
-  name: 'Admin Klinik',
-  email: 'adminklinik@polinela.ac.id',
-  password: 'klinik123',
-  phone: '0812-3456-7890',
-  bio: '',
-  role: 'admin',
-  status: 'civitas akademik',
-  age: '',
-  photo: '',
-  createdAt: '2026-01-01T00:00:00.000Z'
-};
-
 const DEFAULT_SCHEDULES = [
   { id: 1, doctor_name: 'dr. Dian', clinic: 'Poli Umum', day: 'Senin', start_time: '08:00', end_time: '14:00', is_active: 1, createdAt: '2026-01-01T00:00:00.000Z' },
   { id: 2, doctor_name: 'dr. Dian', clinic: 'Poli Umum', day: 'Rabu', start_time: '08:00', end_time: '14:00', is_active: 1, createdAt: '2026-01-01T00:00:00.000Z' },
@@ -48,12 +34,28 @@ const readStore = () => {
   const data = raw ? JSON.parse(raw) : { users: [], medicines: [], queues: [], schedules: [], orders: [] };
   let changed = false;
 
-  if (!data.users || !data.users.length) {
-    data.users = [{ ...DEFAULT_ADMIN }];
+  if (!data.users) {
+    data.users = [
+      { id: 1, name: 'Admin', email: 'admin', password: 'admin', role: 'admin', status: 'administrator' },
+      { id: 2, name: 'Mahasiswa Polinela', email: 'mahasiswa@student.polinela.ac.id', password: '123', role: 'patient', status: 'mahasiswa' },
+      { id: 3, name: 'Dosen Polinela', email: 'dosen@polinela.ac.id', password: '123', role: 'patient', status: 'dosen' }
+    ];
     changed = true;
-  } else if (!data.users.some(u => u.role === 'admin' || u.id === 1)) {
-    data.users.unshift({ ...DEFAULT_ADMIN });
-    changed = true;
+  }
+  {
+    // Pastikan akun mahasiswa dan dosen selalu ada di mock/localStorage
+    const ensureUser = (u) => {
+      const idx = data.users.findIndex(x => x.email.toLowerCase() === u.email.toLowerCase());
+      if (idx === -1) {
+        data.users.push(u);
+        changed = true;
+      } else if (data.users[idx].password !== u.password) {
+        data.users[idx].password = u.password;
+        changed = true;
+      }
+    };
+    ['26783118','26783121','26783110','26783130','26783113','25783035','25783036','25783058','25783065','25783066','25783110','24783010','24783031','24783018','24783020'].forEach(nim => ensureUser({ name: `Mahasiswa ${nim}`, email: `${nim}@student.polinela.ac.id`, password: 'Polinela123', role: 'patient', status: 'mahasiswa', nim }));
+    ensureUser({ name: 'Dosen Fathurrahman', email: 'fathurrahman@polinela.ac.id', password: 'Polinela123', role: 'patient', status: 'dosen' });
   }
 
   if (!data.medicines || !data.medicines.length) {
@@ -128,20 +130,15 @@ function mockApi(path, options = {}) {
   const fail = (message, status = 400) => { const error = new Error(message); error.status = status; throw error; };
 
   if (path === '/api/auth/login' && method === 'POST') {
-    if (body.role === 'admin') {
-      if (body.identifier.toLowerCase() !== 'admin' || body.password !== 'klinik123') fail('Username atau kata sandi admin salah.', 401);
-      const admin = data.users.find(u => u.role === 'admin' || u.id === 1) || DEFAULT_ADMIN;
-      return { ...admin, password: undefined };
-    }
     const user = data.users.find(u => u.email.toLowerCase() === body.identifier.toLowerCase() && u.password === body.password);
-    if (!user) fail('Akun pasien tidak ditemukan atau kata sandi salah.', 401);
+    if (!user) fail('Email atau kata sandi salah.', 401);
     return { ...user, password: undefined };
   }
 
   if (path === '/api/auth/register' && method === 'POST') {
     if (!body.name || !body.email || !body.password) fail('Nama, email, dan kata sandi wajib diisi.');
     if (data.users.some(u => u.email.toLowerCase() === body.email.toLowerCase())) fail('Email sudah terdaftar. Gunakan email lain.', 409);
-    const user = { id: nextId(data.users), name: body.name.trim(), email: body.email.trim().toLowerCase(), password: body.password, phone: body.phone || '', bio: '', role: 'patient', createdAt: new Date().toISOString() };
+    const user = { id: nextId(data.users), name: body.name.trim(), email: body.email.trim().toLowerCase(), password: body.password, phone: body.phone || '', status: body.status || 'mahasiswa', bio: '', role: 'patient', createdAt: new Date().toISOString() };
     data.users.push(user);
     writeStore(data);
     return { ...user, password: undefined };
@@ -332,10 +329,7 @@ function clearError(selector) {
 }
 
 function setLoginMode() {
-  const isPatient = $("#login-role").value === "patient";
-  $("#login-email").value = isPatient ? "" : "admin";
-  $("#login-password").value = isPatient ? "" : "klinik123";
-  $("#login-email").placeholder = isPatient ? "Masukkan email terdaftar" : "Masukkan username admin";
+  $("#login-email").placeholder = "Masukkan email terdaftar";
   $("#login-password").placeholder = "Masukkan kata sandi";
   clearError("#login-error");
 }
@@ -399,8 +393,6 @@ document.addEventListener("click", e => {
   }
 });
 
-$("#login-role").addEventListener("change", setLoginMode);
-
 $("#show-register").addEventListener("click", () => {
   $("#login-form").classList.add("hidden");
   $(".register-prompt").classList.add("hidden");
@@ -412,8 +404,7 @@ $("#cancel-register").addEventListener("click", () => {
   $("#register-form").classList.add("hidden");
   $("#login-form").classList.remove("hidden");
   $(".register-prompt").classList.remove("hidden");
-  $("#login-role").value = "patient";
-  setLoginMode();
+
 });
 
 $("#register-form").addEventListener("submit", async event => {
@@ -423,17 +414,17 @@ $("#register-form").addEventListener("submit", async event => {
   const email = $("#register-email").value.trim().toLowerCase();
   const password = $("#register-password").value;
   const phone = $("#register-phone").value.trim();
+  const status = $("#register-status")?.value || 'mahasiswa';
 
   try {
     await api('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, phone })
+      body: JSON.stringify({ name, email, password, phone, status })
     });
     $("#register-form").reset();
     $("#register-form").classList.add("hidden");
     $("#login-form").classList.remove("hidden");
     $(".register-prompt").classList.remove("hidden");
-    $("#login-role").value = "patient";
     $("#login-email").value = email;
     $("#login-password").value = "";
     toast("Akun berhasil dibuat. Silakan masuk.");
@@ -445,14 +436,13 @@ $("#register-form").addEventListener("submit", async event => {
 $("#login-form").addEventListener("submit", async event => {
   event.preventDefault();
   clearError("#login-error");
-  const role = $("#login-role").value;
   const identifier = $("#login-email").value.trim();
-  const password = $("#login-password").value;
+  const password = $("#login-password").value.trim();
 
   try {
     const user = await api('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ identifier, password, role })
+      body: JSON.stringify({ identifier, password })
     });
     currentUser = user;
     await refreshData();
@@ -541,6 +531,20 @@ function renderProfile() {
             </div>
         </div>
         <div class="profile-detail">
+            <span>🎓</span>
+            <div>
+                <small>NIM / Identitas</small>
+                <strong>${escapeHTML(currentUser.nim || "-")}</strong>
+            </div>
+        </div>
+        <div class="profile-detail">
+            <span>🏫</span>
+            <div>
+                <small>Program Studi</small>
+                <strong>${escapeHTML(currentUser.prodi || "-")}</strong>
+            </div>
+        </div>
+        <div class="profile-detail">
             <span>⏳</span>
             <div>
                 <small>Usia Pasien</small>
@@ -597,6 +601,8 @@ function renderProfile() {
   if ($("#profile-name")) $("#profile-name").value = currentUser.name || "";
   if ($("#profile-email")) $("#profile-email").value = currentUser.email || "";
   if ($("#profile-phone")) $("#profile-phone").value = currentUser.phone || "";
+  if ($("#profile-nim")) $("#profile-nim").value = currentUser.nim || "";
+  if ($("#profile-prodi")) $("#profile-prodi").value = currentUser.prodi || "";
   if ($("#profile-age")) $("#profile-age").value = currentUser.age || "";
   if ($("#profile-status")) $("#profile-status").value = currentUser.status || (isAdmin ? "administrator" : "mahasiswa");
   if ($("#profile-photo")) $("#profile-photo").value = "";
@@ -627,7 +633,7 @@ function startSession() {
   $("#admin-obat-nav")?.classList.toggle("hidden", !isAdmin);
 
   $("#patient-home-nav")?.classList.toggle("hidden", isAdmin);
-  $("#patient-nav")?.classList.toggle("hidden", isAdmin);
+  $("#patient-records-nav")?.classList.toggle("hidden", isAdmin);
   $("#patient-jadwal-nav")?.classList.toggle("hidden", isAdmin);
   $("#info-obat-nav")?.classList.toggle("hidden", isAdmin);
   $("#patient-lokasi-nav")?.classList.toggle("hidden", isAdmin);
@@ -772,6 +778,7 @@ function showPage(page) {
         pasien: "Antrian Saya",
         jadwal: "Jadwal Dokter",
         "info-obat": "Informasi Obat",
+        "medical-records": "Riwayat Rekam Medis",
         lokasi: "Lokasi Klinik",
         profil: "Profil Pasien"
       };
@@ -785,6 +792,8 @@ function showPage(page) {
     else renderPatientHome();
   } else if (page === "jadwal") {
     renderSchedules();
+  } else if (page === "medical-records") {
+    renderMedicalRecords();
   } else if (page === "info-obat") {
     renderInfoObat();
     renderOrderHistory();
@@ -795,6 +804,8 @@ function showPage(page) {
     renderQueues();
   } else if (page === "pasien") {
     renderPatientQueues();
+  } else if (page === "medical-records") {
+    renderMedicalRecords();
   } else if (page === "profil") {
     renderProfile();
   }
@@ -2215,6 +2226,8 @@ $("#profile-form").addEventListener("submit", async event => {
     const name = $("#profile-name").value.trim();
     const email = $("#profile-email").value.trim().toLowerCase();
     const phone = $("#profile-phone").value.trim();
+    const nim = $("#profile-nim") ? $("#profile-nim").value.trim() : "";
+    const prodi = $("#profile-prodi") ? $("#profile-prodi").value.trim() : "";
     const age = isAdmin
         ? (currentUser.age || null)
         : ($("#profile-age").value ? Number($("#profile-age").value) : null);
@@ -2241,6 +2254,8 @@ $("#profile-form").addEventListener("submit", async event => {
                     name,
                     email,
                     phone,
+                    nim,
+                    prodi,
                     age,
                     status,
                     bio,
@@ -2353,6 +2368,67 @@ document.addEventListener("keydown", e => {
     closeModal();
   }
 });
+
+async function renderMedicalRecords() {
+  if (!currentUser) return;
+  const container = $("#medical-record-list");
+  if (!container) return;
+
+  try {
+    const records = await api(`/api/medical-records?email=${encodeURIComponent(currentUser.email)}`);
+    const dateFilter = $("#medical-record-date") ? $("#medical-record-date").value : "";
+
+    const filtered = dateFilter
+      ? records.filter(r => r.date.startsWith(dateFilter))
+      : records;
+
+    if (!filtered.length) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+          <div style="font-size: 40px; margin-bottom: 10px;">📋</div>
+          <strong style="font-size: 16px; color: var(--ink); display: block;">Belum ada rekam medis</strong>
+          <p style="margin-top: 4px;">Data pemeriksaan medis Anda akan muncul di sini setelah diperiksa oleh dokter.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(r => `
+      <div style="border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 14px; background: #fff;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px dashed var(--line); padding-bottom: 10px;">
+          <div>
+            <span class="pill" style="background: var(--teal-light); color: var(--teal); margin-bottom: 4px;">${escapeHTML(r.clinic)}</span>
+            <strong style="display: block; font-size: 15px; margin-top: 2px;">${escapeHTML(r.doctor)}</strong>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 12px; font-weight: 600; color: var(--teal);">${escapeHTML(r.date)}</span>
+          </div>
+        </div>
+
+        <div style="display: grid; gap: 8px; font-size: 13px;">
+          <div><strong style="color: var(--ink);">Keluhan:</strong> <span style="color: #475569;">${escapeHTML(r.complaint)}</span></div>
+          <div><strong style="color: var(--ink);">Hasil Pemeriksaan:</strong> <span style="color: #475569;">${escapeHTML(r.examination)}</span></div>
+          <div><strong style="color: var(--ink);">Diagnosis:</strong> <span style="color: var(--teal-dark); font-weight: 600;">${escapeHTML(r.diagnosis)}</span></div>
+          <div><strong style="color: var(--ink);">Tindakan:</strong> <span style="color: #475569;">${escapeHTML(r.action)}</span></div>
+          ${r.followUpNotes ? `<div><strong style="color: var(--ink);">Catatan Tindak Lanjut:</strong> <span style="color: #475569;">${escapeHTML(r.followUpNotes)}</span></div>` : ''}
+          ${r.prescription ? `
+            <div style="margin-top: 6px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid var(--teal);">
+              <strong style="color: var(--teal-dark); display: block; font-size: 12px;">Resep Obat:</strong>
+              <span style="color: #334155; font-size: 13px;">${escapeHTML(r.prescription)}</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = `<p class="muted" style="padding:1.5rem;text-align:center">Gagal memuat rekam medis.</p>`;
+  }
+}
+
+const medDateFilter = $("#medical-record-date");
+if (medDateFilter) {
+  medDateFilter.addEventListener("change", renderMedicalRecords);
+}
 
 // Inisialisasi awal
 refreshData().then(() => {

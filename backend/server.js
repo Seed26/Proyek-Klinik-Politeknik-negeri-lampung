@@ -30,11 +30,21 @@ if (fs.existsSync(SCHEMA_PATH)) {
   try { db.exec("ALTER TABLE users ADD COLUMN age INTEGER"); } catch (_) {}
   try { db.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE users ADD COLUMN photo TEXT DEFAULT ''"); } catch (_) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN nim TEXT DEFAULT ''"); } catch (_) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN prodi TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE queues ADD COLUMN complaint TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE medicines ADD COLUMN dosage TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE medicines ADD COLUMN sideEffects TEXT DEFAULT ''"); } catch (_) {}
   const schemaSql = fs.readFileSync(SCHEMA_PATH, 'utf-8');
   db.exec(schemaSql);
+  db.exec(`UPDATE users SET password = 'Polinela123' WHERE lower(email) IN (
+    '26783118@student.polinela.ac.id', '26783121@student.polinela.ac.id', '26783110@student.polinela.ac.id',
+    '26783130@student.polinela.ac.id', '26783113@student.polinela.ac.id', '25783035@student.polinela.ac.id',
+    '25783036@student.polinela.ac.id', '25783058@student.polinela.ac.id', '25783065@student.polinela.ac.id',
+    '25783066@student.polinela.ac.id', '25783110@student.polinela.ac.id', '24783010@student.polinela.ac.id',
+    '24783031@student.polinela.ac.id', '24783018@student.polinela.ac.id', '24783020@student.polinela.ac.id',
+    'fathurrahman@polinela.ac.id'
+  )`);
   try {
     db.exec(`
       UPDATE medicines SET
@@ -71,13 +81,13 @@ if (fs.existsSync(SCHEMA_PATH)) {
 
 // Pre-compiled prepared statements untuk hindari re-kompilasi query
 const stmts = {
-  getAdmin: db.prepare('SELECT id, name, email, phone, bio, role, age, status, photo FROM users WHERE role = ?'),
-  getUserLogin: db.prepare("SELECT id, name, email, phone, bio, role, age, status, photo FROM users WHERE lower(email) = lower(?) AND password = ? AND role = 'patient'"),
+  getAdmin: db.prepare('SELECT id, name, email, phone, bio, role, age, status, photo, nim, prodi FROM users WHERE role = ?'),
+  getUserLogin: db.prepare("SELECT id, name, email, phone, bio, role, age, status, photo, nim, prodi FROM users WHERE (lower(email) = lower(?) OR (role = 'admin' AND lower(?) = 'admin')) AND password = ?"),
   getUserByEmail: db.prepare('SELECT id FROM users WHERE lower(email) = lower(?)'),
   getUserById: db.prepare('SELECT email FROM users WHERE id = ?'),
   checkDupEmail: db.prepare('SELECT id FROM users WHERE lower(email) = lower(?) AND id != ?'),
-  insertUser: db.prepare("INSERT INTO users (name, email, password, phone, role, createdAt) VALUES (?, ?, ?, ?, 'patient', ?)"),
-  updateUser: db.prepare('UPDATE users SET name = ?, email = ?, phone = ?, bio = ?, age = ?, status = ?, photo = ? WHERE id = ?'),
+  insertUser: db.prepare("INSERT INTO users (name, email, password, phone, status, role, createdAt, nim, prodi) VALUES (?, ?, ?, ?, ?, 'patient', ?, ?, ?)"),
+  updateUser: db.prepare('UPDATE users SET name = ?, email = ?, phone = ?, bio = ?, age = ?, status = ?, photo = ?, nim = ?, prodi = ? WHERE id = ?'),
   updateQueuesUser: db.prepare('UPDATE queues SET patientEmail = ?, name = ? WHERE lower(patientEmail) = lower(?)'),
   getMedicines: db.prepare('SELECT * FROM medicines ORDER BY id ASC'),
   insertMedicine: db.prepare('INSERT INTO medicines (name, category, form, stock, description, dosage, sideEffects, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'),
@@ -96,7 +106,10 @@ const stmts = {
   getOrders: db.prepare('SELECT * FROM orders ORDER BY date DESC'),
   getOrderById: db.prepare('SELECT * FROM orders WHERE id = ?'),
   insertOrder: db.prepare('INSERT INTO orders (id, userId, name, items, status, date) VALUES (?, ?, ?, ?, ?, ?)'),
-  updateOrderStatus: db.prepare('UPDATE orders SET status = ? WHERE id = ?')
+  updateOrderStatus: db.prepare('UPDATE orders SET status = ? WHERE id = ?'),
+  getMedicalRecords: db.prepare('SELECT * FROM medical_records ORDER BY date DESC, id DESC'),
+  getMedicalRecordsByEmail: db.prepare('SELECT * FROM medical_records WHERE lower(patientEmail) = lower(?) ORDER BY date DESC, id DESC'),
+  insertMedicalRecord: db.prepare('INSERT INTO medical_records (patientEmail, patientName, date, clinic, doctor, complaint, examination, diagnosis, action, followUpNotes, prescription, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
 };
 
 // Helpers
@@ -224,27 +237,20 @@ const server = http.createServer(async (req, res) => {
     try {
       // POST /api/auth/login
       if (pathname === '/api/auth/login' && method === 'POST') {
-        const { identifier, password, role } = await parseJSON(req);
-        if (role === 'admin') {
-          if (identifier.toLowerCase() !== 'admin' || password !== 'klinik123') {
-            return sendJSON(res, 401, { error: 'Username atau kata sandi admin salah.' });
-          }
-          const admin = stmts.getAdmin.get('admin') || {
-            id: 1, name: 'Admin Klinik', email: 'adminklinik@polinela.ac.id', phone: '0812-3456-7890', bio: '', role: 'admin'
-          };
-          return sendJSON(res, 200, admin);
+        const { identifier, password } = await parseJSON(req);
+        if (!identifier || !password) {
+          return sendJSON(res, 400, { error: 'Email dan kata sandi wajib diisi.' });
         }
-
-        const user = stmts.getUserLogin.get(identifier.trim(), password);
+        let user = stmts.getUserLogin.get(identifier, identifier, password);
         if (!user) {
-          return sendJSON(res, 401, { error: 'Akun pasien tidak ditemukan atau kata sandi salah.' });
+          return sendJSON(res, 401, { error: 'Email atau kata sandi salah.' });
         }
         return sendJSON(res, 200, user);
       }
 
       // POST /api/auth/register
       if (pathname === '/api/auth/register' && method === 'POST') {
-        const { name, email, password, phone } = await parseJSON(req);
+        const { name, email, password, phone, status, nim = '', prodi = '' } = await parseJSON(req);
         if (!name || !email || !password) {
           return sendJSON(res, 400, { error: 'Nama, email, dan kata sandi wajib diisi.' });
         }
@@ -254,13 +260,15 @@ const server = http.createServer(async (req, res) => {
         }
 
         const createdAt = new Date().toISOString();
-        const insert = stmts.insertUser.run(name.trim(), email.trim().toLowerCase(), password, phone ? phone.trim() : '', createdAt);
+        const userStatus = status ? status.trim().toLowerCase() : 'mahasiswa';
+        const insert = stmts.insertUser.run(name.trim(), email.trim().toLowerCase(), password, phone ? phone.trim() : '', userStatus, createdAt, String(nim).trim(), String(prodi).trim());
 
         return sendJSON(res, 201, {
           id: Number(insert.lastInsertRowid),
           name: name.trim(),
           email: email.trim().toLowerCase(),
           phone: phone ? phone.trim() : '',
+          status: userStatus,
           role: 'patient',
           createdAt,
         });
@@ -270,7 +278,7 @@ const server = http.createServer(async (req, res) => {
       const userMatch = pathname.match(/^\/api\/users\/(\d+)$/);
       if (userMatch && method === 'PUT') {
         const id = Number(userMatch[1]);
-        const { name, email, phone, bio = '', age = null, status = '', photo = '' } = await parseJSON(req);
+        const { name, email, phone, bio = '', age = null, status = '', photo = '', nim = '', prodi = '' } = await parseJSON(req);
         if (!name?.trim() || !email?.trim() || typeof bio !== 'string' || bio.length > 1000) {
           return sendJSON(res, 400, { error: 'Nama, email, dan bio (maksimal 1000 karakter) wajib valid.' });
         }
@@ -282,7 +290,7 @@ const server = http.createServer(async (req, res) => {
         const prevUser = stmts.getUserById.get(id);
         stmts.updateUser.run(
           name.trim(), email.trim().toLowerCase(), phone ? phone.trim() : '', bio.trim(),
-          age ? Number(age) : null, status ? String(status).trim() : '', photo || '', id
+          age ? Number(age) : null, status ? String(status).trim() : '', photo || '', String(nim).trim(), String(prodi).trim(), id
         );
 
         if (prevUser) {
@@ -299,7 +307,9 @@ const server = http.createServer(async (req, res) => {
           bio: bio.trim(),
           age: age ? Number(age) : null,
           status: status ? String(status).trim() : '',
-          photo: photo || ''
+          photo: photo || '',
+          nim: String(nim).trim(),
+          prodi: String(prodi).trim()
         });
       }
 
@@ -476,6 +486,22 @@ const server = http.createServer(async (req, res) => {
           stmts.deleteQueue.run(id);
           return sendJSON(res, 200, { success: true, id });
         }
+      }
+
+      // GET /api/medical-records
+      if (pathname === '/api/medical-records' && method === 'GET') {
+        const email = parsedUrl.searchParams.get('email');
+        return sendJSON(res, 200, email ? stmts.getMedicalRecordsByEmail.all(email) : stmts.getMedicalRecords.all());
+      }
+
+      // POST /api/medical-records
+      if (pathname === '/api/medical-records' && method === 'POST') {
+        const body = await parseJSON(req);
+        const required = ['patientEmail', 'patientName', 'date', 'clinic', 'doctor', 'complaint', 'examination', 'diagnosis', 'action'];
+        if (required.some(key => !String(body[key] || '').trim())) return sendJSON(res, 400, { error: 'Data rekam medis belum lengkap.' });
+        const record = { ...body, followUpNotes: body.followUpNotes || '', prescription: body.prescription || '', createdAt: new Date().toISOString() };
+        const result = stmts.insertMedicalRecord.run(record.patientEmail.trim().toLowerCase(), record.patientName.trim(), record.date, record.clinic.trim(), record.doctor.trim(), record.complaint.trim(), record.examination.trim(), record.diagnosis.trim(), record.action.trim(), record.followUpNotes.trim(), record.prescription.trim(), record.createdAt);
+        return sendJSON(res, 201, { id: Number(result.lastInsertRowid), ...record });
       }
 
       // GET & POST /api/orders

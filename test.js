@@ -133,18 +133,18 @@ assert.strictEqual(resPatchOrder.status, 200);
 const resStatic = await fetch(`http://localhost:${PORT}/`);
 assert.strictEqual(resStatic.status, 200);
 const indexHtml = await resStatic.text();
-assert(indexHtml.includes('id="admin-home-nav"') && indexHtml.includes('id="patient-home-nav"'));
+assert(indexHtml.includes('id="patient-home-nav"'));
 assert(indexHtml.includes('id="patient-jadwal-nav"'));
 
 const resHomeHtml = await fetch(`http://localhost:${PORT}/pages/home.html`);
 assert.strictEqual(resHomeHtml.status, 200);
 const homeHtml = await resHomeHtml.text();
-assert(homeHtml.includes('id="admin-home-dashboard"') && homeHtml.includes('id="patient-home-dashboard"'));
+assert(homeHtml.includes('id="patient-home-dashboard"'));
 
 const resJadwalHtml = await fetch(`http://localhost:${PORT}/pages/jadwal.html`);
 assert.strictEqual(resJadwalHtml.status, 200);
 const jadwalHtml = await resJadwalHtml.text();
-assert(jadwalHtml.includes('id="jadwal-admin-table"') && jadwalHtml.includes('id="jadwal-patient-grid"'));
+assert(jadwalHtml.includes('id="jadwal-patient-grid"'));
 
 console.log('Self-check passed: Backend, SQLite DB, dan Frontend static OK.');
 process.exit(0);

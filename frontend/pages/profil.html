@@ -66,31 +66,27 @@
 
             <div class="form-row">
                 <div id="profile-group-status">
-                    <label for="profile-status">Status Pasien</label>
+                    <label for="profile-status">Status Pengguna</label>
                     <select id="profile-status">
                         <option value="mahasiswa">Mahasiswa</option>
                         <option value="dosen">Dosen</option>
-                        <option value="civitas akademik">Civitas Akademik</option>
+                        <option value="tenaga teknis">Tenaga Teknis</option>
                     </select>
                 </div>
-
-                <div id="profile-group-role" class="hidden">
-                    <label for="profile-role-display">Peran / Jabatan</label>
-                    <input
-                        id="profile-role-display"
-                        type="text"
-                        value="Administrator Klinik"
-                        disabled
-                    />
+                <div>
+                    <label for="profile-nim">NIM / Identitas</label>
+                    <input id="profile-nim" type="text" placeholder="Masukkan NIM/NIP" />
                 </div>
+            </div>
 
+            <div class="form-row">
+                <div>
+                    <label for="profile-prodi">Program Studi</label>
+                    <input id="profile-prodi" type="text" placeholder="Contoh: D3 Manajemen Informatika" />
+                </div>
                 <div>
                     <label for="profile-phone" id="profile-label-phone">Nomor HP</label>
-                    <input
-                        id="profile-phone"
-                        type="tel"
-                        placeholder="08xxxxxxxxxx"
-                    />
+                    <input id="profile-phone" type="tel" placeholder="08xxxxxxxxxx" />
                 </div>
             </div>
 
@@ -103,16 +99,6 @@
                         min="1"
                         max="120"
                         placeholder="Contoh: 21"
-                    />
-                </div>
-
-                <div id="profile-group-unit" class="hidden">
-                    <label for="profile-unit-display">Unit Penugasan</label>
-                    <input
-                        id="profile-unit-display"
-                        type="text"
-                        value="Klinik Pratama Polinela"
-                        disabled
                     />
                 </div>
 

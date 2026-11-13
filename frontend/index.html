@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="profile-dropdown.css" />
   <link rel="stylesheet" href="patient-home.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js" defer></script>
+
 </head>
 <body>
   <!-- Login / Register Section -->
@@ -20,21 +20,14 @@
       />
       <p class="eyebrow">KLINIK POLINELA</p>
       <h1>Selamat datang</h1>
-      <p class="muted">Masuk sebagai admin atau pengguna untuk melanjutkan.</p>
+      <p class="muted">Masuk untuk mengakses layanan pasien.</p>
 
       <form id="login-form">
-        <label for="login-role">Masuk sebagai</label>
-        <select id="login-role" class="select-input login-select">
-          <option value="admin">Admin Klinik</option>
-          <option value="patient">Pengguna / Pasien</option>
-        </select>
-
         <label for="login-email">Email / Username</label>
         <input
           id="login-email"
           type="text"
           placeholder="Masukkan username atau email"
-          value="admin"
           required
           autocomplete="username"
         />
@@ -45,7 +38,6 @@
             id="login-password"
             type="password"
             placeholder="Masukkan kata sandi"
-            value="klinik123"
             required
             autocomplete="current-password"
           />
@@ -60,13 +52,13 @@
       </form>
 
       <p class="register-prompt">
-        Belum punya akun pasien?
+        Belum punya akun?
         <button type="button" id="show-register" class="inline-link">Daftar di sini</button>
       </p>
 
       <form id="register-form" class="register-form hidden">
         <div class="register-heading">
-          <strong>Buat akun pasien</strong>
+          <strong>Buat Akun Baru</strong>
           <span>Isi data untuk membuat akun baru.</span>
         </div>
 
@@ -95,6 +87,13 @@
         <label for="register-phone">Nomor telepon (opsional)</label>
         <input id="register-phone" name="phone" type="tel" placeholder="08xxxxxxxxxx" />
 
+        <label for="register-status">Status</label>
+        <select id="register-status" name="status" class="select-input" required>
+          <option value="">-- Pilih Status --</option>
+          <option value="mahasiswa">Mahasiswa</option>
+          <option value="dosen">Dosen</option>
+        </select>
+
         <p id="register-error" class="form-error hidden" role="alert"></p>
         <button class="btn primary full" type="submit">Buat Akun</button>
         <button class="btn outline full register-cancel" type="button" id="cancel-register">Kembali ke Login</button>
@@ -119,24 +118,17 @@
         <img src="assets/logo_klinik-removebg-preview.png" alt="Logo Klinik Polinela" class="sidebar-logo" />
         <div class="brand-copy">
           <strong>Klinik Polinela</strong>
-          <small id="brand-role-subtitle">Management System</small>
+          <small id="brand-role-subtitle">Portal Layanan Kesehatan</small>
         </div>
       </div>
 
       <div class="nav-caption">MENU UTAMA</div>
       <nav>
-        <!-- Menu Admin -->
-        <button class="nav-link active" data-page="home" id="admin-home-nav"><span class="nav-icon">▦</span> Home / Dashboard</button>
-        <button class="nav-link" data-page="antrian" id="admin-antrian-nav"><span class="nav-icon">☷</span> Kelola Antrian</button>
-        <button class="nav-link" data-page="jadwal" id="admin-jadwal-nav"><span class="nav-icon">☖</span> Jadwal Dokter</button>
-        <button class="nav-link" data-page="obat" id="admin-obat-nav"><span class="nav-icon">▤</span> Data Obat</button>
-
-        <!-- Menu Pasien -->
-        <button class="nav-link hidden" data-page="home" id="patient-home-nav"><span class="nav-icon">▦</span> Beranda</button>
-        <button class="nav-link hidden" data-page="pasien" id="patient-nav"><span class="nav-icon">▣</span> Antrian Saya</button>
-        <button class="nav-link hidden" data-page="jadwal" id="patient-jadwal-nav"><span class="nav-icon">☖</span> Jadwal Dokter</button>
-        <button class="nav-link hidden" data-page="info-obat" id="info-obat-nav"><span class="nav-icon">▤</span> Informasi Obat</button>
-        <button class="nav-link hidden" data-page="lokasi" id="patient-lokasi-nav"><span class="nav-icon">⌖</span> Lokasi Klinik</button>
+        <button class="nav-link active" data-page="home" id="patient-home-nav"><span class="nav-icon">▦</span> Beranda</button>
+        <button class="nav-link" data-page="pasien"><span class="nav-icon">▣</span> Antrian Saya</button>
+        <button class="nav-link" data-page="jadwal" id="patient-jadwal-nav"><span class="nav-icon">☖</span> Jadwal Dokter</button>
+        <button class="nav-link" data-page="medical-records" id="patient-records-nav"><span class="nav-icon">▤</span> Rekam Medis</button>
+        <button class="nav-link" data-page="lokasi" id="patient-lokasi-nav"><span class="nav-icon">⌖</span> Lokasi Klinik</button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -174,17 +166,17 @@
           </div>
           <div class="profile-dropdown-wrapper">
             <button type="button" class="user-chip" id="profile-menu-toggle" aria-expanded="false" aria-controls="profile-dropdown" title="Buka menu akun">
-              <div class="avatar">A</div>
+              <div class="avatar">P</div>
               <div class="user-chip-copy">
-                <strong id="top-user-name">Admin Klinik</strong>
-                <small>Administrator</small>
+                <strong id="top-user-name">Pengguna</strong>
+                <small>Mahasiswa</small>
               </div>
               <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <div class="profile-dropdown hidden" id="profile-dropdown" role="menu">
               <div class="profile-dropdown-user">
-                <div class="avatar profile-dropdown-avatar">A</div>
-                <div><strong id="profile-menu-name">Admin Klinik</strong><small id="profile-menu-role">Administrator</small><small id="profile-menu-email">-</small></div>
+                <div class="avatar profile-dropdown-avatar">P</div>
+                <div><strong id="profile-menu-name">Pengguna</strong><small id="profile-menu-role">Mahasiswa</small><small id="profile-menu-email">-</small></div>
               </div>
               <div class="profile-menu-list">
                 <button type="button" class="profile-menu-item" data-goto="profil" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg><span>Profil Saya</span></button>
@@ -198,12 +190,10 @@
 
       <!-- Page placeholders — loaded from pages/ folder -->
       <div id="page-container-home"></div>
-      <div id="page-container-obat"></div>
-      <div id="page-container-antrian"></div>
       <div id="page-container-pasien"></div>
-      <div id="page-container-lokasi"></div>
-      <div id="page-container-info-obat"></div>
       <div id="page-container-jadwal"></div>
+      <div id="page-container-medical-records"></div>
+      <div id="page-container-lokasi"></div>
       <div id="page-container-profil"></div>
 
     </main>
@@ -230,14 +220,12 @@
   <script>
     (async function loadPages() {
       const pages = [
-        { container: 'page-container-home',     file: 'pages/home.html' },
-        { container: 'page-container-obat',     file: 'pages/obat.html' },
-        { container: 'page-container-antrian',  file: 'pages/antrian.html' },
-        { container: 'page-container-pasien',   file: 'pages/pasien.html' },
-        { container: 'page-container-lokasi',   file: 'pages/lokasi.html' },
-        { container: 'page-container-info-obat',file: 'pages/info-obat.html' },
-        { container: 'page-container-jadwal',   file: 'pages/jadwal.html' },
-        { container: 'page-container-profil',   file: 'pages/profil.html' }
+        { container: 'page-container-home', file: 'pages/home.html' },
+        { container: 'page-container-pasien', file: 'pages/pasien.html' },
+        { container: 'page-container-jadwal', file: 'pages/jadwal.html' },
+        { container: 'page-container-medical-records', file: 'pages/medical-records.html' },
+        { container: 'page-container-lokasi', file: 'pages/lokasi.html' },
+        { container: 'page-container-profil', file: 'pages/profil.html' }
       ];
 
       await Promise.all(pages.map(async ({ container, file }) => {

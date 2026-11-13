@@ -9,10 +9,12 @@ CREATE TABLE IF NOT EXISTS users (
   phone TEXT DEFAULT '',
   bio TEXT DEFAULT '',
   age INTEGER DEFAULT NULL,
-  status TEXT DEFAULT '',
+  status TEXT DEFAULT 'mahasiswa',
   photo TEXT DEFAULT '',
-  role TEXT NOT NULL CHECK(role IN ('admin', 'patient')),
-  createdAt TEXT NOT NULL
+  role TEXT NOT NULL DEFAULT 'patient',
+  createdAt TEXT NOT NULL,
+  nim TEXT DEFAULT '',
+  prodi TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS medicines (
@@ -42,8 +44,34 @@ CREATE TABLE IF NOT EXISTS queues (
 );
 
 -- Data Awal (Seed Data)
-INSERT OR IGNORE INTO users (id, name, email, password, phone, role, createdAt)
-VALUES (1, 'Admin Klinik', 'adminklinik@polinela.ac.id', 'klinik123', '0812-3456-7890', 'admin', '2026-01-01T00:00:00.000Z');
+INSERT OR IGNORE INTO users (id, name, email, password, phone, status, role, createdAt)
+VALUES (1, 'Administrator', 'adminklinik@polinela.ac.id', 'klinik123', '0812-3456-7890', 'administrator', 'admin', '2026-01-01T00:00:00.000Z');
+
+INSERT OR IGNORE INTO users (name, email, password, phone, status, role, createdAt, nim, prodi)
+VALUES ('Mahasiswa Polinela', 'mahasiswa@student.polinela.ac.id', '123456', '0812-3456-7891', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '21573010', 'D3 Manajemen Informatika');
+
+INSERT OR IGNORE INTO users (name, email, password, phone, status, role, createdAt, nim, prodi)
+VALUES ('Dosen Polinela', 'dosen@polinela.ac.id', '123456', '0812-3456-7892', 'dosen', 'patient', '2026-01-01T00:00:00.000Z', '198501012010121001', 'Dosen Jurusan Ekonomi dan Bisnis');
+
+-- Akun mahasiswa dan dosen aktif
+INSERT OR IGNORE INTO users (name, email, password, status, role, createdAt, nim, prodi) VALUES
+('Mahasiswa 26783118', '26783118@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '26783118', ''),
+('Mahasiswa 26783121', '26783121@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '26783121', ''),
+('Mahasiswa 26783110', '26783110@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '26783110', ''),
+('Mahasiswa 26783130', '26783130@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '26783130', ''),
+('Mahasiswa 26783113', '26783113@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '26783113', ''),
+('Mahasiswa 25783035', '25783035@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '25783035', ''),
+('Mahasiswa 25783036', '25783036@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '25783036', ''),
+('Mahasiswa 25783058', '25783058@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '25783058', ''),
+('Mahasiswa 25783065', '25783065@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '25783065', ''),
+('Mahasiswa 25783066', '25783066@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '25783066', ''),
+('Mahasiswa 25783110', '25783110@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '25783110', ''),
+('Mahasiswa 24783010', '24783010@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '24783010', ''),
+('Mahasiswa 24783031', '24783031@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '24783031', ''),
+('Mahasiswa 24783018', '24783018@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '24783018', ''),
+('Mahasiswa 24783020', '24783020@student.polinela.ac.id', 'Polinela123', 'mahasiswa', 'patient', '2026-01-01T00:00:00.000Z', '24783020', '');
+INSERT OR IGNORE INTO users (name, email, password, status, role, createdAt, nim, prodi)
+VALUES ('Dosen Fathurrahman', 'fathurrahman@polinela.ac.id', 'Polinela123', 'dosen', 'patient', '2026-01-01T00:00:00.000Z', '', '');
 
 INSERT OR IGNORE INTO medicines (id, name, category, form, stock, description, dosage, sideEffects, image) VALUES
 (1, 'Paracetamol 500 mg', 'Analgesik', 'Tablet', 120, 'Meredakan demam dan nyeri ringan hingga sedang seperti sakit kepala, sakit gigi, dan nyeri otot.', 'Dewasa: 1 tablet 3-4 kali sehari setelah makan. Anak 6-12 tahun: 1/2 - 1 tablet 3-4 kali sehari.', 'Jarang terjadi; pemakaian berlebih dapat merusak fungsi hati.', ''),
@@ -80,3 +108,23 @@ CREATE TABLE IF NOT EXISTS orders (
   status TEXT NOT NULL DEFAULT 'Menunggu Pengambilan',
   date TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS medical_records (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  patientEmail TEXT NOT NULL,
+  patientName TEXT NOT NULL,
+  date TEXT NOT NULL,
+  clinic TEXT NOT NULL,
+  doctor TEXT NOT NULL,
+  complaint TEXT NOT NULL,
+  examination TEXT NOT NULL,
+  diagnosis TEXT NOT NULL,
+  action TEXT NOT NULL,
+  followUpNotes TEXT DEFAULT '',
+  prescription TEXT DEFAULT '',
+  createdAt TEXT NOT NULL
+);
+
+INSERT OR IGNORE INTO medical_records (id, patientEmail, patientName, date, clinic, doctor, complaint, examination, diagnosis, action, followUpNotes, prescription, createdAt) VALUES
+(1, 'mahasiswa@student.polinela.ac.id', 'Mahasiswa Polinela', '2026-02-15', 'Poli Umum', 'dr. Dian', 'Demam 2 hari, sakit kepala, badan lemas', 'Suhu tubuh 38.2°C, tekanan darah 115/75 mmHg, nadi 84x/menit, faring sedikit hiperemis', 'Faringitis Akut & Febris', 'Edukasi istirahat cukup, kompres hangat, hidrasi cairan 2L/hari', 'Kontrol kembali jika demam berlanjut > 3 hari', 'Paracetamol 500mg 3x1 (bila demam), Vitamin C 500mg 1x1', '2026-02-15T09:30:00.000Z'),
+(2, 'mahasiswa@student.polinela.ac.id', 'Mahasiswa Polinela', '2026-01-10', 'Poli Umum', 'dr. Tya', 'Nyeri ulu hati, mual setelah telat makan', 'Tekanan darah 120/80 mmHg, nyeri tekan epigastrium (+)', 'Dispepsia / Gastritis Ringan', 'Konseling pola makan teratur, hindari makanan pedas dan asam', 'Minum obat lambung sebelum makan', 'Antasida 3x1 sebelum makan', '2026-01-10T10:15:00.000Z');
