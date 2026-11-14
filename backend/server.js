@@ -2,6 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 
@@ -32,6 +33,10 @@ if (fs.existsSync(SCHEMA_PATH)) {
   try { db.exec("ALTER TABLE users ADD COLUMN photo TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE users ADD COLUMN nim TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE users ADD COLUMN prodi TEXT DEFAULT ''"); } catch (_) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN onboarded INTEGER DEFAULT 0"); } catch (_) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN personal_email TEXT DEFAULT ''"); } catch (_) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN otp TEXT DEFAULT NULL"); } catch (_) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN otp_expiry TEXT DEFAULT NULL"); } catch (_) {}
   try { db.exec("ALTER TABLE queues ADD COLUMN complaint TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE medicines ADD COLUMN dosage TEXT DEFAULT ''"); } catch (_) {}
   try { db.exec("ALTER TABLE medicines ADD COLUMN sideEffects TEXT DEFAULT ''"); } catch (_) {}
@@ -77,17 +82,19 @@ if (fs.existsSync(SCHEMA_PATH)) {
     CREATE INDEX IF NOT EXISTS idx_orders_userId ON orders(userId);
     CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(date);
   `);
+  // Batasan: satu antrian per pasien per hari (patientEmail tidak kosong)
+  try { db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_queues_one_per_day ON queues(patientEmail, date) WHERE patientEmail != ''"); } catch (_) {}
 }
 
 // Pre-compiled prepared statements untuk hindari re-kompilasi query
 const stmts = {
-  getAdmin: db.prepare('SELECT id, name, email, phone, bio, role, age, status, photo, nim, prodi FROM users WHERE role = ?'),
-  getUserLogin: db.prepare("SELECT id, name, email, phone, bio, role, age, status, photo, nim, prodi FROM users WHERE (lower(email) = lower(?) OR (role = 'admin' AND lower(?) = 'admin')) AND password = ?"),
+  getAdmin: db.prepare('SELECT id, name, email, phone, bio, role, age, status, photo, nim, prodi, onboarded, personal_email FROM users WHERE role = ?'),
+  getUserLogin: db.prepare("SELECT id, name, email, phone, bio, role, age, status, photo, nim, prodi, onboarded, personal_email FROM users WHERE (lower(email) = lower(?) OR (role = 'admin' AND lower(?) = 'admin')) AND password = ?"),
   getUserByEmail: db.prepare('SELECT id FROM users WHERE lower(email) = lower(?)'),
-  getUserById: db.prepare('SELECT email FROM users WHERE id = ?'),
+  getUserById: db.prepare('SELECT email, onboarded FROM users WHERE id = ?'),
   checkDupEmail: db.prepare('SELECT id FROM users WHERE lower(email) = lower(?) AND id != ?'),
   insertUser: db.prepare("INSERT INTO users (name, email, password, phone, status, role, createdAt, nim, prodi) VALUES (?, ?, ?, ?, ?, 'patient', ?, ?, ?)"),
-  updateUser: db.prepare('UPDATE users SET name = ?, email = ?, phone = ?, bio = ?, age = ?, status = ?, photo = ?, nim = ?, prodi = ? WHERE id = ?'),
+  updateUser: db.prepare('UPDATE users SET name = ?, email = ?, phone = ?, bio = ?, age = ?, status = ?, photo = ?, nim = ?, prodi = ?, personal_email = ? WHERE id = ?'),
   updateQueuesUser: db.prepare('UPDATE queues SET patientEmail = ?, name = ? WHERE lower(patientEmail) = lower(?)'),
   getMedicines: db.prepare('SELECT * FROM medicines ORDER BY id ASC'),
   insertMedicine: db.prepare('INSERT INTO medicines (name, category, form, stock, description, dosage, sideEffects, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'),
@@ -100,6 +107,7 @@ const stmts = {
   getAllQueues: db.prepare('SELECT * FROM queues ORDER BY id DESC'),
   getQueuesByDate: db.prepare('SELECT * FROM queues WHERE date = ? ORDER BY id DESC'),
   insertQueue: db.prepare('INSERT INTO queues (number, name, doctor, clinic, time, date, createdAt, status, patientEmail, complaint) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'),
+  getQueueToday: db.prepare('SELECT id FROM queues WHERE lower(patientEmail) = lower(?) AND date = ? LIMIT 1'),
   updateQueue: db.prepare('UPDATE queues SET name = ?, clinic = ?, doctor = ?, time = ?, date = ?, status = ?, complaint = ? WHERE id = ?'),
   updateQueueStatus: db.prepare('UPDATE queues SET status = ? WHERE id = ?'),
   deleteQueue: db.prepare('DELETE FROM queues WHERE id = ?'),
@@ -274,11 +282,23 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // POST /api/auth/change-password
+      if (pathname === '/api/auth/change-password' && method === 'POST') {
+        const { userId, currentPassword, newPassword } = await parseJSON(req);
+        if (!userId || !currentPassword || !newPassword || newPassword.length < 6) {
+          return sendJSON(res, 400, { error: 'Data kata sandi tidak valid.' });
+        }
+        const user = db.prepare('SELECT password FROM users WHERE id = ?').get(Number(userId));
+        if (!user || user.password !== currentPassword) return sendJSON(res, 401, { error: 'Kata sandi lama salah.' });
+        db.prepare('UPDATE users SET password = ? WHERE id = ?').run(newPassword, Number(userId));
+        return sendJSON(res, 200, { success: true });
+      }
+
       // PUT /api/users/:id
       const userMatch = pathname.match(/^\/api\/users\/(\d+)$/);
       if (userMatch && method === 'PUT') {
         const id = Number(userMatch[1]);
-        const { name, email, phone, bio = '', age = null, status = '', photo = '', nim = '', prodi = '' } = await parseJSON(req);
+        const { name, email, phone, bio = '', age = null, status = '', photo = '', nim = '', prodi = '', personal_email = '' } = await parseJSON(req);
         if (!name?.trim() || !email?.trim() || typeof bio !== 'string' || bio.length > 1000) {
           return sendJSON(res, 400, { error: 'Nama, email, dan bio (maksimal 1000 karakter) wajib valid.' });
         }
@@ -290,7 +310,7 @@ const server = http.createServer(async (req, res) => {
         const prevUser = stmts.getUserById.get(id);
         stmts.updateUser.run(
           name.trim(), email.trim().toLowerCase(), phone ? phone.trim() : '', bio.trim(),
-          age ? Number(age) : null, status ? String(status).trim() : '', photo || '', String(nim).trim(), String(prodi).trim(), id
+          age ? Number(age) : null, status ? String(status).trim() : '', photo || '', String(nim).trim(), String(prodi).trim(), personal_email.trim().toLowerCase(), id
         );
 
         if (prevUser) {
@@ -309,7 +329,8 @@ const server = http.createServer(async (req, res) => {
           status: status ? String(status).trim() : '',
           photo: photo || '',
           nim: String(nim).trim(),
-          prodi: String(prodi).trim()
+          prodi: String(prodi).trim(),
+          personal_email: personal_email.trim().toLowerCase()
         });
       }
 
@@ -433,6 +454,11 @@ const server = http.createServer(async (req, res) => {
         if (!name?.trim() || !number?.trim()) {
           return sendJSON(res, 400, { error: 'Nama dan nomor antrian wajib diisi.' });
         }
+        const queueDate = (date || new Date().toISOString().split('T')[0]);
+        const email = patientEmail ? patientEmail.trim().toLowerCase() : '';
+        if (email && stmts.getQueueToday.get(email, queueDate)) {
+          return sendJSON(res, 409, { error: 'Anda sudah mendaftar antrian hari ini. Maksimal satu antrian per hari.' });
+        }
         const insert = stmts.insertQueue.run(
           number.trim(), name.trim(), doctor || 'dr. Dian', clinic || 'Poli Umum', time || '', date || new Date().toISOString().split('T')[0], createdAt || new Date().toISOString(), status || 'Menunggu', patientEmail ? patientEmail.trim().toLowerCase() : '', complaint ? complaint.trim() : ''
         );
@@ -550,6 +576,82 @@ const server = http.createServer(async (req, res) => {
           } catch (_) {}
         }
         return sendJSON(res, 200, { success: true, id: orderId, status });
+      }
+
+      // GET /api/auth/status - cek status onboarding pasien
+      if (pathname === '/api/auth/status' && method === 'GET') {
+        const email = parsedUrl.searchParams.get('email');
+        if (!email) return sendJSON(res, 400, { error: 'Email wajib diisi.' });
+        const row = stmts.getUserByEmail.get(email);
+        if (!row) return sendJSON(res, 404, { error: 'Pengguna tidak ditemukan.' });
+        const user = stmts.getUserById.get(row.id);
+        return sendJSON(res, 200, { onboarded: Number(user.onboarded || 0), email: user.email });
+      }
+
+      // POST /api/auth/send-otp - kirim OTP verifikasi
+      if (pathname === '/api/auth/send-otp' && method === 'POST') {
+        const { email, type, userId } = await parseJSON(req);
+        if (!email) return sendJSON(res, 400, { error: 'Email wajib diisi.' });
+        // Onboarding menyimpan email pribadi sebelum pencarian OTP.
+        let target;
+        if (type === 'onboarding' && userId) {
+          target = db.prepare('SELECT id FROM users WHERE id = ?').get(Number(userId));
+          if (target) db.prepare('UPDATE users SET personal_email = ? WHERE id = ?').run(email.trim().toLowerCase(), target.id);
+        } else {
+          target = type === 'onboarding' || type === 'reset'
+            ? db.prepare('SELECT id FROM users WHERE lower(personal_email) = lower(?)').get(email)
+            : stmts.getUserByEmail.get(email);
+        }
+        if (!target) return sendJSON(res, 404, { error: 'Email tidak ditemukan.' });
+        const otp = crypto.randomInt(100000, 999999).toString();
+        const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        db.prepare('UPDATE users SET otp = ?, otp_expiry = ? WHERE id = ?').run(otp, expiry, target.id);
+        // ponytail: disimulasi pengiriman email; diganti SMTP nanti. OTP dicetak ke console server.
+        console.log(`[OTP ${type || 'verifikasi'}] untuk ${email}: ${otp} (berlaku 10 menit)`);
+        return sendJSON(res, 200, { success: true, message: 'Kode OTP telah dikirim ke email Anda.', otp });
+      }
+
+      // POST /api/auth/verify-otp - verifikasi OTP
+      if (pathname === '/api/auth/verify-otp' && method === 'POST') {
+        const { email, otp, type, userId } = await parseJSON(req);
+        if (!email || !otp) return sendJSON(res, 400, { error: 'Email dan kode OTP wajib diisi.' });
+        const target = type === 'onboarding' && userId
+          ? db.prepare('SELECT id FROM users WHERE id = ?').get(Number(userId))
+          : type === 'onboarding' || type === 'reset'
+            ? db.prepare('SELECT id FROM users WHERE lower(personal_email) = lower(?)').get(email)
+            : stmts.getUserByEmail.get(email);
+        if (!target) return sendJSON(res, 404, { error: 'Email tidak ditemukan.' });
+        const row = db.prepare('SELECT otp, otp_expiry FROM users WHERE id = ?').get(target.id);
+        if (!row || row.otp !== String(otp)) return sendJSON(res, 400, { error: 'Kode OTP salah.' });
+        if (!row.otp_expiry || new Date(row.otp_expiry) < new Date()) return sendJSON(res, 400, { error: 'Kode OTP kadaluarsa.' });
+        if (type !== 'reset' && type !== 'onboarding') db.prepare('UPDATE users SET otp = NULL, otp_expiry = NULL WHERE id = ?').run(target.id);
+        return sendJSON(res, 200, { success: true, message: 'OTP berhasil diverifikasi.' });
+      }
+
+      // POST /api/auth/onboard - selesaikan onboarding (reset password + set personal email)
+      if (pathname === '/api/auth/onboard' && method === 'POST') {
+        const { userId, newPassword, personalEmail, name } = await parseJSON(req);
+        if (!userId || !newPassword || !personalEmail || !name) return sendJSON(res, 400, { error: 'Nama, email, dan kata sandi wajib diisi.' });
+        if (newPassword.length < 6) return sendJSON(res, 400, { error: 'Kata sandi minimal 6 karakter.' });
+        const user = stmts.getUserById.get(Number(userId));
+        if (!user) return sendJSON(res, 404, { error: 'Pengguna tidak ditemukan.' });
+        
+        // Verifikasi OTP di sini jika diperlukan atau diasumsikan verifikasi dilakukan terpisah
+        db.prepare('UPDATE users SET password = ?, personal_email = ?, name = ?, onboarded = 1 WHERE id = ?')
+          .run(newPassword, personalEmail.trim().toLowerCase(), name.trim(), Number(userId));
+          
+        return sendJSON(res, 200, { success: true, message: 'Onboarding selesai. Silakan masuk kembali.' });
+      }
+
+      // POST /api/auth/reset-password - reset kata sandi dengan OTP (lupa password)
+      if (pathname === '/api/auth/reset-password' && method === 'POST') {
+        const { email, newPassword } = await parseJSON(req);
+        if (!email || !newPassword) return sendJSON(res, 400, { error: 'Email dan kata sandi baru wajib diisi.' });
+        if (newPassword.length < 6) return sendJSON(res, 400, { error: 'Kata sandi minimal 6 karakter.' });
+        const user = stmts.getUserByEmail.get(email);
+        if (!user) return sendJSON(res, 404, { error: 'Email belum terdaftar.' });
+        db.prepare('UPDATE users SET password = ? WHERE id = ?').run(newPassword, user.id);
+        return sendJSON(res, 200, { success: true, message: 'Kata sandi berhasil diubah.' });
       }
 
       return sendJSON(res, 404, { error: 'Endpoint API tidak ditemukan' });

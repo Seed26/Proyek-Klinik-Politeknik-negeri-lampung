@@ -51,53 +51,9 @@
         <button class="btn primary full" type="submit">Masuk <span>→</span></button>
       </form>
 
-      <p class="register-prompt">
-        Belum punya akun?
-        <button type="button" id="show-register" class="inline-link">Daftar di sini</button>
+      <p class="register-prompt" style="text-align:center; margin-top:12px;">
+        <button type="button" id="show-forgot-password" class="inline-link">Lupa kata sandi?</button>
       </p>
-
-      <form id="register-form" class="register-form hidden">
-        <div class="register-heading">
-          <strong>Buat Akun Baru</strong>
-          <span>Isi data untuk membuat akun baru.</span>
-        </div>
-
-        <label for="register-name">Nama lengkap</label>
-        <input id="register-name" name="name" placeholder="Nama sesuai identitas" required />
-
-        <label for="register-email">Email</label>
-        <input id="register-email" name="email" type="email" placeholder="nama@email.com" required />
-
-        <label for="register-password">Kata sandi</label>
-        <div class="password-wrapper">
-          <input
-            id="register-password"
-            name="password"
-            type="password"
-            minlength="6"
-            placeholder="Minimal 6 karakter"
-            required
-          />
-          <button type="button" class="toggle-password" data-target="register-password" aria-label="Tampilkan kata sandi">
-            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
-        </div>
-
-        <label for="register-phone">Nomor telepon (opsional)</label>
-        <input id="register-phone" name="phone" type="tel" placeholder="08xxxxxxxxxx" />
-
-        <label for="register-status">Status</label>
-        <select id="register-status" name="status" class="select-input" required>
-          <option value="">-- Pilih Status --</option>
-          <option value="mahasiswa">Mahasiswa</option>
-          <option value="dosen">Dosen</option>
-        </select>
-
-        <p id="register-error" class="form-error hidden" role="alert"></p>
-        <button class="btn primary full" type="submit">Buat Akun</button>
-        <button class="btn outline full register-cancel" type="button" id="cancel-register">Kembali ke Login</button>
-      </form>
     </div>
 
     <div class="login-side">
@@ -106,6 +62,139 @@
       <div class="login-side-content">
         <span class="pill light-pill">LAYANAN KESEHATAN</span>
         <h2>Pelayanan yang lebih tertata, untuk semua.</h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- Onboarding Screen -->
+  <section id="onboarding-screen" class="login-screen hidden">
+    <div class="login-card" style="max-width:480px;">
+      <img src="assets/logo_klinik-removebg-preview.png" alt="Logo Klinik" class="login-logo" />
+      <p class="eyebrow">KLINIK POLINELA</p>
+
+      <!-- Step 1: Set Password -->
+      <div id="onboard-step-1">
+        <h1>Selamat datang! 👋</h1>
+        <p class="muted">Ini pertama kali Anda masuk. Lengkapi nama, kata sandi baru, dan email pribadi untuk keamanan akun.</p>
+        <form id="onboard-password-form" style="margin-top:16px;">
+          <label for="onboard-full-name">Nama Lengkap</label>
+          <input id="onboard-full-name" type="text" placeholder="Masukkan nama lengkap" required autocomplete="name" />
+          <label for="onboard-new-password" style="margin-top:8px;">Kata sandi baru</label>
+          <div class="password-wrapper">
+            <input id="onboard-new-password" type="password" placeholder="Minimal 6 karakter" minlength="6" required autocomplete="new-password" />
+            <button type="button" class="toggle-password" data-target="onboard-new-password" aria-label="Tampilkan kata sandi">
+              <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <label for="onboard-confirm-password" style="margin-top:8px;">Konfirmasi kata sandi</label>
+          <div class="password-wrapper">
+            <input id="onboard-confirm-password" type="password" placeholder="Ulangi kata sandi baru" minlength="6" required autocomplete="new-password" />
+            <button type="button" class="toggle-password" data-target="onboard-confirm-password" aria-label="Tampilkan kata sandi">
+              <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <label for="onboard-personal-email" style="margin-top:8px;">Email pribadi (untuk verifikasi & pemulihan akun)</label>
+          <input id="onboard-personal-email" type="email" placeholder="contoh@gmail.com" required autocomplete="email" />
+          <p id="onboard-step1-error" class="form-error hidden" role="alert"></p>
+          <button class="btn primary full" type="submit" style="margin-top:16px;">Simpan dan Lanjutkan →</button>
+          <button type="button" id="onboard-skip-btn" class="btn outline full" style="margin-top:8px;">Lewati sementara</button>
+        </form>
+      </div>
+
+      <!-- Step 3: Done -->
+      <div id="onboard-step-3" class="hidden" style="text-align:center; padding:20px 0;">
+        <div style="font-size:48px; margin-bottom:12px;">✅</div>
+        <h1>Akun siap!</h1>
+        <p class="muted">Kata sandi dan email pribadi Anda berhasil disimpan. Silakan masuk dengan kata sandi baru.</p>
+        <button class="btn primary full" id="onboard-done-btn" style="margin-top:20px;">Masuk Sekarang →</button>
+      </div>
+    </div>
+
+    <div class="login-side">
+      <div class="side-orb orb-one"></div>
+      <div class="side-orb orb-two"></div>
+      <div class="login-side-content">
+        <span class="pill light-pill">KEAMANAN AKUN</span>
+        <h2>Lindungi akun Anda dengan email pribadi yang terverifikasi.</h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- Forgot Password Screen -->
+  <section id="forgot-password-screen" class="login-screen hidden">
+    <div class="login-card" style="max-width:440px;">
+      <img src="assets/logo_klinik-removebg-preview.png" alt="Logo Klinik" class="login-logo" />
+      <p class="eyebrow">KLINIK POLINELA</p>
+
+      <!-- Step 1: Input email pribadi -->
+      <div id="forgot-step-1">
+        <h1>Lupa Kata Sandi?</h1>
+        <p class="muted">Masukkan email pribadi yang terdaftar di akun Anda. Kami akan mengirim kode OTP untuk verifikasi.</p>
+        <form id="forgot-email-form" style="margin-top:16px;">
+          <label for="forgot-personal-email">Email pribadi terdaftar</label>
+          <input id="forgot-personal-email" type="email" placeholder="contoh@gmail.com" required autocomplete="email" />
+          <p id="forgot-step1-error" class="form-error hidden" role="alert"></p>
+          <button class="btn primary full" type="submit" style="margin-top:16px;">Kirim Kode OTP →</button>
+          <button type="button" id="forgot-back-btn" class="btn outline full" style="margin-top:8px;">Kembali ke Login</button>
+        </form>
+      </div>
+
+      <!-- Step 2: OTP -->
+      <div id="forgot-step-2" class="hidden">
+        <h1>Masukkan Kode OTP</h1>
+        <p class="muted">Kode OTP dikirim ke <strong id="forgot-otp-email-label">email Anda</strong>. Berlaku 10 menit.</p>
+        <form id="forgot-otp-form" style="margin-top:16px;">
+          <label for="forgot-otp-input">Kode OTP</label>
+          <input id="forgot-otp-input" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="6 digit kode OTP" required style="letter-spacing:6px; font-size:20px; text-align:center;" />
+          <p id="forgot-otp-error" class="form-error hidden" role="alert"></p>
+          <button class="btn primary full" type="submit" style="margin-top:16px;">Verifikasi OTP →</button>
+          <button type="button" id="forgot-resend-otp" class="btn outline full" style="margin-top:8px;">Kirim ulang OTP</button>
+        </form>
+      </div>
+
+      <!-- Step 3: New password -->
+      <div id="forgot-step-3" class="hidden">
+        <h1>Buat Kata Sandi Baru</h1>
+        <p class="muted">Verifikasi berhasil. Masukkan kata sandi baru Anda.</p>
+        <form id="forgot-newpass-form" style="margin-top:16px;">
+          <label for="forgot-new-password">Kata sandi baru</label>
+          <div class="password-wrapper">
+            <input id="forgot-new-password" type="password" placeholder="Minimal 6 karakter" minlength="6" required autocomplete="new-password" />
+            <button type="button" class="toggle-password" data-target="forgot-new-password" aria-label="Tampilkan kata sandi">
+              <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <label for="forgot-confirm-password" style="margin-top:8px;">Konfirmasi kata sandi baru</label>
+          <div class="password-wrapper">
+            <input id="forgot-confirm-password" type="password" placeholder="Ulangi kata sandi baru" minlength="6" required autocomplete="new-password" />
+            <button type="button" class="toggle-password" data-target="forgot-confirm-password" aria-label="Tampilkan kata sandi">
+              <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <p id="forgot-newpass-error" class="form-error hidden" role="alert"></p>
+          <button class="btn primary full" type="submit" style="margin-top:16px;">Simpan Kata Sandi Baru →</button>
+        </form>
+      </div>
+
+      <!-- Step 4: Done -->
+      <div id="forgot-step-4" class="hidden" style="text-align:center; padding:20px 0;">
+        <div style="font-size:48px; margin-bottom:12px;">🎉</div>
+        <h1>Kata sandi berhasil diubah!</h1>
+        <p class="muted">Silakan masuk dengan kata sandi baru Anda.</p>
+        <button class="btn primary full" id="forgot-done-btn" style="margin-top:20px;">Masuk Sekarang →</button>
+      </div>
+    </div>
+
+    <div class="login-side">
+      <div class="side-orb orb-one"></div>
+      <div class="side-orb orb-two"></div>
+      <div class="login-side-content">
+        <span class="pill light-pill">PEMULIHAN AKUN</span>
+        <h2>Keamanan akun Anda adalah prioritas kami.</h2>
       </div>
     </div>
   </section>
@@ -180,7 +269,7 @@
               </div>
               <div class="profile-menu-list">
                 <button type="button" class="profile-menu-item" data-goto="profil" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg><span>Profil Saya</span></button>
-                <button type="button" class="profile-menu-item" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4V19a2 2 0 1 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A2 2 0 0 0 3.6 11H3a2 2 0 1 1 0-4h.2A2 2 0 0 0 4.6 3.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 11 3.6V3a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 19.4 11h.2a2 2 0 1 1 0 4h-.2Z"/></svg><span>Pengaturan Akun</span></button>
+                <button type="button" class="profile-menu-item" data-goto="ubah-kata-sandi" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4V19a2 2 0 1 1-4 0v-.2a2 2 0 0 0-3.4-1.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A2 2 0 0 0 3.6 11H3a2 2 0 1 1 0-4h.2A2 2 0 0 0 4.6 3.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 11 3.6V3a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 19.4 11h.2a2 2 0 1 1 0 4h-.2Z"/></svg><span>Ubah Kata Sandi</span></button>
                 <button type="button" class="profile-menu-logout" id="profile-logout-btn" role="menuitem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M21 19V5a2 2 0 0 0-2-2h-6"/></svg><span>Keluar</span></button>
               </div>
             </div>
@@ -195,6 +284,7 @@
       <div id="page-container-medical-records"></div>
       <div id="page-container-lokasi"></div>
       <div id="page-container-profil"></div>
+      <div id="page-container-ubah-kata-sandi"></div>
 
     </main>
   </div>
@@ -225,7 +315,8 @@
         { container: 'page-container-jadwal', file: 'pages/jadwal.html' },
         { container: 'page-container-medical-records', file: 'pages/medical-records.html' },
         { container: 'page-container-lokasi', file: 'pages/lokasi.html' },
-        { container: 'page-container-profil', file: 'pages/profil.html' }
+        { container: 'page-container-profil', file: 'pages/profil.html' },
+        { container: 'page-container-ubah-kata-sandi', file: 'pages/ubah-kata-sandi.html' }
       ];
 
       await Promise.all(pages.map(async ({ container, file }) => {

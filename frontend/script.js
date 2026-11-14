@@ -2,8 +2,6 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 let medicines = [];
-let cart = [];
-let orders = [];
 let queues = [];
 let schedules = [];
 let currentUser = null;
@@ -142,6 +140,31 @@ function mockApi(path, options = {}) {
     data.users.push(user);
     writeStore(data);
     return { ...user, password: undefined };
+  }
+
+  // OTP mock saat frontend dijalankan tanpa backend.
+  if (path === '/api/auth/send-otp' && method === 'POST') {
+    const user = data.users.find(u => Number(u.id) === Number(body.userId)) || data.users.find(u => (u.personal_email || '').toLowerCase() === String(body.email || '').toLowerCase());
+    if (!user) fail('Data tidak ditemukan.', 404);
+    user.personal_email = String(body.email).trim().toLowerCase();
+    user.otp = '123456';
+    writeStore(data);
+    return { success: true, message: 'OTP simulasi: gunakan 123456.' };
+  }
+  if (path === '/api/auth/verify-otp' && method === 'POST') {
+    const user = data.users.find(u => Number(u.id) === Number(body.userId)) || data.users.find(u => (u.personal_email || '').toLowerCase() === String(body.email || '').toLowerCase());
+    if (!user || user.otp !== String(body.otp)) fail('Kode OTP salah. Gunakan 123456.');
+    return { success: true };
+  }
+  if (path === '/api/auth/onboard' && method === 'POST') {
+    const user = data.users.find(u => Number(u.id) === Number(body.userId) || (body.email && u.email.toLowerCase() === String(body.email).toLowerCase()));
+    if (!user) fail('Data tidak ditemukan.', 404);
+    user.password = body.newPassword;
+    user.personal_email = body.personalEmail.toLowerCase();
+    user.name = body.name || user.name;
+    user.onboarded = 1;
+    writeStore(data);
+    return { success: true };
   }
 
   if (path === '/api/orders' && method === 'GET') {
@@ -393,44 +416,158 @@ document.addEventListener("click", e => {
   }
 });
 
-$("#show-register").addEventListener("click", () => {
-  $("#login-form").classList.add("hidden");
-  $(".register-prompt").classList.add("hidden");
-  $("#register-form").classList.remove("hidden");
-  clearError("#register-error");
+let tempOnboardUser = null;
+let tempOnboardPassword = '';
+let tempOnboardEmail = '';
+
+let tempForgotEmail = '';
+
+// Toggle lupa password
+$("#show-forgot-password")?.addEventListener("click", () => {
+  $("#login-screen").classList.add("hidden");
+  $("#forgot-password-screen").classList.remove("hidden");
+  $("#forgot-step-1").classList.remove("hidden");
+  $("#forgot-step-2").classList.add("hidden");
+  $("#forgot-step-3").classList.add("hidden");
+  $("#forgot-step-4").classList.add("hidden");
+  clearError("#forgot-step1-error");
 });
 
-$("#cancel-register").addEventListener("click", () => {
-  $("#register-form").classList.add("hidden");
-  $("#login-form").classList.remove("hidden");
-  $(".register-prompt").classList.remove("hidden");
-
+$("#forgot-back-btn")?.addEventListener("click", () => {
+  $("#forgot-password-screen").classList.add("hidden");
+  $("#login-screen").classList.remove("hidden");
 });
 
-$("#register-form").addEventListener("submit", async event => {
+$("#forgot-done-btn")?.addEventListener("click", () => {
+  $("#forgot-password-screen").classList.add("hidden");
+  $("#login-screen").classList.remove("hidden");
+  $("#login-password").value = "";
+  toast("Silakan masuk dengan kata sandi baru Anda");
+});
+
+// Submit Form Lupa Password Step 1
+$("#forgot-email-form")?.addEventListener("submit", async event => {
   event.preventDefault();
-  clearError("#register-error");
-  const name = $("#register-name").value.trim();
-  const email = $("#register-email").value.trim().toLowerCase();
-  const password = $("#register-password").value;
-  const phone = $("#register-phone").value.trim();
-  const status = $("#register-status")?.value || 'mahasiswa';
+  clearError("#forgot-step1-error");
+  const email = $("#forgot-personal-email").value.trim().toLowerCase();
+  try {
+    const res = await api('/api/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, type: 'reset' })
+    });
+    tempForgotEmail = email;
+    $("#forgot-step-1").classList.add("hidden");
+    $("#forgot-step-2").classList.remove("hidden");
+    $("#forgot-otp-email-label").textContent = email;
+    toast(res.message || "OTP dikirim ke email");
+  } catch (err) {
+    showError("#forgot-step1-error", err.message);
+  }
+});
+
+// Submit Form Lupa Password Step 2 (Verify OTP)
+$("#forgot-otp-form")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  clearError("#forgot-otp-error");
+  const otp = $("#forgot-otp-input").value.trim();
+  try {
+    await api('/api/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email: tempForgotEmail, otp, type: 'reset' })
+    });
+    $("#forgot-step-2").classList.add("hidden");
+    $("#forgot-step-3").classList.remove("hidden");
+    toast("OTP terverifikasi");
+  } catch (err) {
+    showError("#forgot-otp-error", err.message);
+  }
+});
+
+$("#forgot-resend-otp")?.addEventListener("click", async () => {
+  try {
+    const res = await api('/api/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email: tempForgotEmail, type: 'reset' })
+    });
+    toast(res.message || "OTP dikirim ulang");
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+// Submit Form Lupa Password Step 3 (New Password)
+$("#forgot-newpass-form")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  clearError("#forgot-newpass-error");
+  const newPassword = $("#forgot-new-password").value;
+  const confirmPassword = $("#forgot-confirm-password").value;
+  if (newPassword !== confirmPassword) {
+    showError("#forgot-newpass-error", "Konfirmasi kata sandi tidak cocok.");
+    return;
+  }
+  try {
+    await api('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email: tempForgotEmail, newPassword })
+    });
+    $("#forgot-step-3").classList.add("hidden");
+    $("#forgot-step-4").classList.remove("hidden");
+  } catch (err) {
+    showError("#forgot-newpass-error", err.message);
+  }
+});
+
+// Bypass sementara onboarding; akun tetap diminta onboarding pada login berikutnya.
+$("#onboard-skip-btn")?.addEventListener("click", async () => {
+  try {
+    currentUser = tempOnboardUser;
+    await refreshData();
+    $("#onboarding-screen").classList.add("hidden");
+    startSession();
+  } catch (err) {
+    showError("#onboard-step1-error", err.message);
+  }
+});
+
+// Onboarding: Form Step 1
+$("#onboard-password-form")?.addEventListener("submit", async event => {
+  event.preventDefault();
+  clearError("#onboard-step1-error");
+  const fullName = $("#onboard-full-name").value.trim();
+  const newPassword = $("#onboard-new-password").value;
+  const confirmPassword = $("#onboard-confirm-password").value;
+  const personalEmail = $("#onboard-personal-email").value.trim().toLowerCase();
+
+  if (newPassword !== confirmPassword) {
+    showError("#onboard-step1-error", "Konfirmasi kata sandi tidak cocok.");
+    return;
+  }
 
   try {
-    await api('/api/auth/register', {
+    await api('/api/auth/onboard', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, phone, status })
+      body: JSON.stringify({
+        userId: tempOnboardUser.id,
+        name: fullName,
+        newPassword,
+        personalEmail
+      })
     });
-    $("#register-form").reset();
-    $("#register-form").classList.add("hidden");
-    $("#login-form").classList.remove("hidden");
-    $(".register-prompt").classList.remove("hidden");
-    $("#login-email").value = email;
-    $("#login-password").value = "";
-    toast("Akun berhasil dibuat. Silakan masuk.");
+    tempOnboardUser.name = fullName;
+    tempOnboardUser.personal_email = personalEmail;
+    $("#onboard-step-1").classList.add("hidden");
+    $("#onboard-step-3").classList.remove("hidden");
+    toast("Data onboarding berhasil disimpan");
   } catch (err) {
-    showError("#register-error", err.message);
+    showError("#onboard-step1-error", err.message);
   }
+});
+
+$("#onboard-done-btn")?.addEventListener("click", () => {
+  $("#onboarding-screen").classList.add("hidden");
+  $("#login-screen").classList.remove("hidden");
+  $("#login-password").value = "";
+  toast("Onboarding selesai. Silakan login kembali dengan password baru.");
 });
 
 $("#login-form").addEventListener("submit", async event => {
@@ -444,6 +581,18 @@ $("#login-form").addEventListener("submit", async event => {
       method: 'POST',
       body: JSON.stringify({ identifier, password })
     });
+
+    // Cek apakah akun pasien belum onboarded
+    if (user.role === 'patient' && !user.onboarded) {
+      tempOnboardUser = user;
+      $("#login-screen").classList.add("hidden");
+      $("#onboarding-screen").classList.remove("hidden");
+      $("#onboard-step-1").classList.remove("hidden");
+      $("#onboard-step-2").classList.add("hidden");
+      $("#onboard-step-3").classList.add("hidden");
+      return;
+    }
+
     currentUser = user;
     await refreshData();
     startSession();
@@ -491,6 +640,8 @@ function renderProfile() {
 
   const emailPreview = $("#profile-email-preview");
   if (emailPreview) emailPreview.textContent = currentUser.email || "-";
+  const personalEmailPreview = $("#profile-personal-email-preview");
+  if (personalEmailPreview) personalEmailPreview.textContent = currentUser.personal_email || "-";
 
   const roleDetails = $("#profile-role-details");
   if (roleDetails) {
@@ -520,8 +671,6 @@ function renderProfile() {
       `;
     } else {
       const ownQueues = queues.filter(q => q.patientEmail && q.patientEmail.toLowerCase() === currentUser.email?.toLowerCase());
-      const userId = Number(currentUser.id) || 0;
-      const ownOrders = orders.filter(o => (Number(o.userId) || 0) === userId || (o.name && o.name.toLowerCase() === currentUser.name?.toLowerCase()));
       roleDetails.innerHTML = `
         <div class="profile-detail">
             <span>☎</span>
@@ -556,13 +705,6 @@ function renderProfile() {
             <div>
                 <small>Riwayat Antrean</small>
                 <strong>${ownQueues.length} Kunjungan</strong>
-            </div>
-        </div>
-        <div class="profile-detail">
-            <span>▤</span>
-            <div>
-                <small>Riwayat Pesanan Obat</small>
-                <strong>${ownOrders.length} Pesanan</strong>
             </div>
         </div>
       `;
@@ -600,6 +742,7 @@ function renderProfile() {
 
   if ($("#profile-name")) $("#profile-name").value = currentUser.name || "";
   if ($("#profile-email")) $("#profile-email").value = currentUser.email || "";
+  if ($("#profile-personal-email")) $("#profile-personal-email").value = currentUser.personal_email || "";
   if ($("#profile-phone")) $("#profile-phone").value = currentUser.phone || "";
   if ($("#profile-nim")) $("#profile-nim").value = currentUser.nim || "";
   if ($("#profile-prodi")) $("#profile-prodi").value = currentUser.prodi || "";
@@ -635,7 +778,6 @@ function startSession() {
   $("#patient-home-nav")?.classList.toggle("hidden", isAdmin);
   $("#patient-records-nav")?.classList.toggle("hidden", isAdmin);
   $("#patient-jadwal-nav")?.classList.toggle("hidden", isAdmin);
-  $("#info-obat-nav")?.classList.toggle("hidden", isAdmin);
   $("#patient-lokasi-nav")?.classList.toggle("hidden", isAdmin);
 
   const brandSubtitle = $("#brand-role-subtitle");
@@ -657,14 +799,11 @@ function startSession() {
   if (isAdmin) {
     renderHome();
     renderMedicines();
-    renderAdminOrders();
     renderQueues();
     renderSchedules();
   } else {
     renderPatientHome();
     renderPatientQueues();
-    renderInfoObat();
-    renderOrderHistory();
     renderSchedules();
   }
   startPolling();
@@ -696,10 +835,35 @@ if (settingsMenuBtn) {
     const toggleBtn = $("#profile-menu-toggle");
     if (dropdown) dropdown.classList.add("hidden");
     if (toggleBtn) toggleBtn.setAttribute("aria-expanded", "false");
-    showPage("profil");
-    toast("Membuka pengaturan akun");
+    showPage("ubah-kata-sandi");
   });
 }
+
+// SUBMIT UBAH KATA SANDI
+$("#change-password-form")?.addEventListener("submit", async event => {
+    event.preventDefault();
+    clearError("#cp-error");
+    const currentPassword = $("#cp-current-password").value;
+    const newPassword = $("#cp-new-password").value;
+    const confirmPassword = $("#cp-confirm-password").value;
+
+    if (newPassword !== confirmPassword) {
+        showError("#cp-error", "Konfirmasi kata sandi tidak cocok.");
+        return;
+    }
+
+    try {
+        await api('/api/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({ userId: currentUser.id, currentPassword, newPassword })
+        });
+        toast("Kata sandi berhasil diubah.");
+        $("#change-password-form").reset();
+        showPage("home");
+    } catch (err) {
+        showError("#cp-error", err.message);
+    }
+});
 
 $("#profile-logout-btn").addEventListener("click", () => {
   $("#profile-dropdown").classList.add("hidden");
@@ -761,7 +925,7 @@ function showPage(page) {
   $$(".nav-link").forEach(link => {
     const isLinkForRole = isAdmin
       ? link.id.startsWith("admin-")
-      : link.id.startsWith("patient-") || link.id === "info-obat-nav";
+      : link.id.startsWith("patient-");
     link.classList.toggle("active", isLinkForRole && link.dataset.page === page);
   });
 
@@ -777,10 +941,10 @@ function showPage(page) {
         home: "Beranda",
         pasien: "Antrian Saya",
         jadwal: "Jadwal Dokter",
-        "info-obat": "Informasi Obat",
         "medical-records": "Riwayat Rekam Medis",
         lokasi: "Lokasi Klinik",
-        profil: "Profil Pasien"
+        profil: "Profil Pasien",
+        "ubah-kata-sandi": "Ubah Kata Sandi"
       };
 
   $("#breadcrumb-current").textContent = labels[page] || (isAdmin ? "Home / Dashboard" : "Beranda");
@@ -794,12 +958,8 @@ function showPage(page) {
     renderSchedules();
   } else if (page === "medical-records") {
     renderMedicalRecords();
-  } else if (page === "info-obat") {
-    renderInfoObat();
-    renderOrderHistory();
   } else if (page === "obat") {
     renderMedicines();
-    renderAdminOrders();
   } else if (page === "antrian") {
     renderQueues();
   } else if (page === "pasien") {
@@ -808,6 +968,8 @@ function showPage(page) {
     renderMedicalRecords();
   } else if (page === "profil") {
     renderProfile();
+  } else if (page === "ubah-kata-sandi") {
+    document.querySelector("#change-password-form")?.reset();
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1211,14 +1373,16 @@ function renderPatientHome() {
       : '<p class="patient-home-empty">Belum ada riwayat antrean. Silakan ambil antrean untuk mendaftar kunjungan.</p>';
   }
 
-  const userId = Number(currentUser.id) || 0;
-  const ownOrders = orders.filter(o => (Number(o.userId) || 0) === userId || (o.name && o.name.toLowerCase() === currentUser.name.toLowerCase()));
-  if ($("#patient-home-order-total")) $("#patient-home-order-total").textContent = ownOrders.length;
-  const o = ownOrders[0];
-  if ($("#patient-home-orders")) {
-    $("#patient-home-orders").innerHTML = o
-      ? `<div class="patient-home-record"><strong>${escapeHTML(Array.isArray(o.items) && o.items[0]?.name ? o.items[0].name : "Pesanan obat")}</strong><span>${escapeHTML(o.date || o.createdAt || "—")}</span><span>${Array.isArray(o.items) ? o.items.length : 1} item</span>${statusBadge(o.status || "Menunggu")}</div>`
-      : '<p class="patient-home-empty">Belum ada riwayat pesanan obat.</p>';
+  const today = new Date().toISOString().split("T")[0];
+  const todayQueues = queues.filter(q => q.date === today && ["Menunggu", "Diperiksa"].includes(q.status));
+  const waitingCount = todayQueues.filter(q => q.status === "Menunggu").length;
+  const inProgressCount = todayQueues.filter(q => q.status === "Diperiksa").length;
+  const nextQueue = todayQueues.find(q => q.status === "Menunggu");
+  if ($("#patient-home-live-queue")) {
+    $("#patient-home-live-queue").innerHTML = nextQueue
+      ? `<div style="color:var(--primary);">Antrian Berikutnya: <strong>No. ${escapeHTML(nextQueue.number)}</strong> (${escapeHTML(nextQueue.clinic || "—")})</div>
+         <div style="margin-top:8px; font-size:.9rem; color:var(--muted);">Menunggu: <strong>${waitingCount}</strong> | Sedang Diperiksa: <strong>${inProgressCount}</strong></div>`
+      : '<p class="patient-home-empty">Tidak ada antrean aktif hari ini.</p>';
   }
 
   if ($("#patient-home-schedules")) {
@@ -1529,9 +1693,7 @@ async function confirmCart() {
     updateCartCount();
     await refreshData();
     await loadOrders();
-    renderOrderHistory();
     renderPatientHome();
-    renderInfoObat();
     renderMedicines();
     renderHome();
 
@@ -1690,9 +1852,7 @@ async function cancelOrder(orderId) {
     });
     await refreshData();
     await loadOrders();
-    renderOrderHistory();
     renderPatientHome();
-    renderInfoObat();
     renderMedicines();
     renderHome();
     toast('Pesanan berhasil dibatalkan');
@@ -2030,6 +2190,16 @@ function createQueueForm(patientMode) {
       const clinicVal = data.clinic || "Poli Umum";
       const doctorVal = data.doctor || "dr. Dian";
 
+      if (patientMode && currentUser?.email) {
+        const alreadyQueued = queues.some(
+          q => q.patientEmail?.toLowerCase() === currentUser.email.toLowerCase() && q.date === visitDate
+        );
+        if (alreadyQueued) {
+          toast("Anda sudah mendaftar antrean hari ini.", "error");
+          return;
+        }
+      }
+
       const newQ = {
         number: `A-${String(maxNumber).padStart(3, "0")}`,
         name: patientName,
@@ -2144,16 +2314,17 @@ function printTicketPDF() {
 }
 window.printTicketPDF = printTicketPDF;
 
-$("#add-queue-btn").addEventListener("click", () => {
+$("#add-queue-btn")?.addEventListener("click", () => {
   if (currentUser?.role === "admin") createQueueForm(false);
 });
-$("#patient-add-queue-btn").addEventListener("click", () => {
+$("#patient-add-queue-btn")?.addEventListener("click", () => {
   if (currentUser && currentUser.role !== "admin") createQueueForm(true);
 });
 const startQueueFlowBtn = $("#patient-start-queue-flow");
 if (startQueueFlowBtn) {
   startQueueFlowBtn.addEventListener("click", () => {
-    if (currentUser && currentUser.role !== "admin") createQueueForm(true);
+    if (!currentUser) return toast("Silakan masuk terlebih dahulu.");
+    if (currentUser.role !== "admin") createQueueForm(true);
   });
 }
 
@@ -2161,8 +2332,6 @@ const patientQueueFilter = $("#patient-queue-filter");
 if (patientQueueFilter) {
   patientQueueFilter.addEventListener("change", () => renderPatientQueues());
 }
-$("#order-search").addEventListener("input", renderAdminOrders);
-$("#info-obat-search").addEventListener("input", renderInfoObat);
 $("#queue-search").addEventListener("input", renderQueues);
 $("#queue-filter").addEventListener("change", renderQueues);
 
@@ -2224,7 +2393,8 @@ $("#profile-form").addEventListener("submit", async event => {
     const isAdmin = currentUser.role === "admin";
 
     const name = $("#profile-name").value.trim();
-    const email = $("#profile-email").value.trim().toLowerCase();
+    const email = currentUser.email;
+    const personalEmail = $("#profile-personal-email") ? $("#profile-personal-email").value.trim().toLowerCase() : "";
     const phone = $("#profile-phone").value.trim();
     const nim = $("#profile-nim") ? $("#profile-nim").value.trim() : "";
     const prodi = $("#profile-prodi") ? $("#profile-prodi").value.trim() : "";
@@ -2240,8 +2410,8 @@ $("#profile-form").addEventListener("submit", async event => {
         ? ""
         : (selectedProfilePhoto !== null ? selectedProfilePhoto : (currentUser.photo || ""));
 
-    if (!name || !email) {
-        toast("Nama dan email wajib diisi!");
+    if (!name) {
+        toast("Nama lengkap wajib diisi!");
         return;
     }
 
@@ -2253,6 +2423,7 @@ $("#profile-form").addEventListener("submit", async event => {
                 body: JSON.stringify({
                     name,
                     email,
+                    personal_email: personalEmail,
                     phone,
                     nim,
                     prodi,

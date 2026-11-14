@@ -24,8 +24,16 @@
         <div class="profile-detail">
             <span>✉</span>
             <div>
-                <small>Email</small>
+                <small>Email Kampus</small>
                 <strong id="profile-email-preview">-</strong>
+            </div>
+        </div>
+
+        <div class="profile-detail">
+            <span>📧</span>
+            <div>
+                <small>Email Pribadi</small>
+                <strong id="profile-personal-email-preview">-</strong>
             </div>
         </div>
 
@@ -55,11 +63,37 @@
                 </div>
 
                 <div>
-                    <label for="profile-email">Email</label>
+                    <label for="profile-email">Email Kampus</label>
                     <input
                         id="profile-email"
                         type="email"
-                        required
+                        readonly
+                        disabled
+                        title="Email kampus tidak dapat diubah"
+                        style="background-color: var(--surface-secondary, #f1f5f9); cursor: not-allowed;"
+                    />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="profile-personal-email">Email Pribadi Aktif</label>
+                    <input
+                        id="profile-personal-email"
+                        type="email"
+                        placeholder="contoh@gmail.com"
+                    />
+                </div>
+
+                <div>
+                    <label for="profile-nim">NIM / Identitas</label>
+                    <input
+                        id="profile-nim"
+                        type="text"
+                        readonly
+                        disabled
+                        title="NIM / Identitas tidak dapat diubah"
+                        style="background-color: var(--surface-secondary, #f1f5f9); cursor: not-allowed;"
                     />
                 </div>
             </div>
@@ -74,23 +108,17 @@
                     </select>
                 </div>
                 <div>
-                    <label for="profile-nim">NIM / Identitas</label>
-                    <input id="profile-nim" type="text" placeholder="Masukkan NIM/NIP" />
+                    <label for="profile-prodi">Program Studi</label>
+                    <input id="profile-prodi" type="text" placeholder="Contoh: D3 Manajemen Informatika" />
                 </div>
             </div>
 
             <div class="form-row">
-                <div>
-                    <label for="profile-prodi">Program Studi</label>
-                    <input id="profile-prodi" type="text" placeholder="Contoh: D3 Manajemen Informatika" />
-                </div>
                 <div>
                     <label for="profile-phone" id="profile-label-phone">Nomor HP</label>
                     <input id="profile-phone" type="tel" placeholder="08xxxxxxxxxx" />
                 </div>
-            </div>
 
-            <div class="form-row">
                 <div id="profile-group-age">
                     <label for="profile-age">Umur (Tahun)</label>
                     <input
@@ -101,8 +129,10 @@
                         placeholder="Contoh: 21"
                     />
                 </div>
+            </div>
 
-                <div class="profile-photo-group">
+            <div class="form-row">
+                <div class="profile-photo-group" style="grid-column: 1 / -1;">
                     <label for="profile-photo">Foto Profil</label>
                     <div class="profile-photo-control">
                         <input

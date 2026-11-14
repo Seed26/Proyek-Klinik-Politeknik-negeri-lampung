@@ -1,0 +1,53 @@
+<section class="page" id="page-ubah-kata-sandi">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">KEAMANAN AKUN</p>
+      <h1>Ubah Kata Sandi</h1>
+      <p class="muted">Perbarui kata sandi Anda secara berkala untuk menjaga keamanan akun.</p>
+    </div>
+  </div>
+
+  <div class="panel" style="max-width: 500px; margin-top: 24px;">
+    <form id="change-password-form" class="profile-form">
+      <div>
+        <label for="cp-current-password">Kata Sandi Saat Ini</label>
+        <div class="password-wrapper">
+          <input id="cp-current-password" type="password" placeholder="Masukkan kata sandi lama" required />
+          <button type="button" class="toggle-password" data-target="cp-current-password" aria-label="Tampilkan kata sandi">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <label for="cp-new-password">Kata Sandi Baru</label>
+        <div class="password-wrapper">
+          <input id="cp-new-password" type="password" placeholder="Minimal 6 karakter" minlength="6" required />
+          <button type="button" class="toggle-password" data-target="cp-new-password" aria-label="Tampilkan kata sandi">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-actions" style="display: block; margin-top: 24px;">
+        <button type="submit" class="btn primary" style="display: flex; width: 100%; margin-top: 0; visibility: visible; opacity: 1;">Simpan Perubahan Kata Sandi</button>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <label for="cp-confirm-password">Konfirmasi Kata Sandi Baru</label>
+        <div class="password-wrapper">
+          <input id="cp-confirm-password" type="password" placeholder="Ulangi kata sandi baru" minlength="6" required />
+          <button type="button" class="toggle-password" data-target="cp-confirm-password" aria-label="Tampilkan kata sandi">
+            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off-icon hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <p id="cp-error" class="form-error hidden" style="margin-top: 12px;"></p>
+
+    </form>
+  </div>
+</section>

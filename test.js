@@ -70,6 +70,24 @@ assert.strictEqual(resQueue.status, 201);
 const queue = await resQueue.json();
 assert.strictEqual(queue.number, 'A-999');
 
+// Dua antrian sama pasien dalam satu hari harus ditolak
+const resQueueDup = await fetch(`http://localhost:${PORT}/api/queues`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    number: 'A-998',
+    name: 'Pasien Test',
+    doctor: 'dr. Dian',
+    clinic: 'Poli Umum',
+    time: '09:00',
+    date: '2026-11-08',
+    status: 'Menunggu',
+    patientEmail: uniqueEmail,
+    complaint: 'Demam'
+  })
+});
+assert.strictEqual(resQueueDup.status, 409, 'Harus menolak antrian kedua hari yang sama');
+
 const resGetQueues = await fetch(`http://localhost:${PORT}/api/queues`);
 assert.strictEqual(resGetQueues.status, 200);
 const allQueues = await resGetQueues.json();
